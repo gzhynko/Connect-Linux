@@ -14,28 +14,24 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.IO;
-using System.Runtime.Serialization;
-using System.Windows;
+using System.Net;
 using System.Net.NetworkInformation;
+using System.Runtime.Serialization;
 
 namespace LiveFlight
 {
-    class Versioning
+    internal class Versioning
     {
-
-        static String configURL = "http://connect.liveflightapp.com/config/config.json";
-        static String updateURL = "http://connect.liveflightapp.com/update/windows";
+        private static readonly string configURL = "http://connect.liveflightapp.com/config/config.json";
+        private static string updateURL = "http://connect.liveflightapp.com/update/windows";
 
         // set app version
         // done here instead of embedded in assembly meta so that it works with server-side versioning
-        public static String currentAppVersion = "1.1.1";
+        public static string currentAppVersion = "1.1.1";
 
         public static void checkForUpdate()
         {
-
             /*if (IsNetworkAvailable() == true)
             {
 
@@ -69,20 +65,18 @@ namespace LiveFlight
             {
                 Console.WriteLine("No internet connection - ignore update check");
             }*/
-
-
         }
 
         private static string makeGetRequest()
         {
             try
             {
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(configURL);
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-                Stream stream = response.GetResponseStream();
-                StreamReader reader = new StreamReader(stream);
+                var request = (HttpWebRequest) WebRequest.Create(configURL);
+                var response = (HttpWebResponse) request.GetResponse();
+                var stream = response.GetResponseStream();
+                var reader = new StreamReader(stream);
 
-                string data = reader.ReadToEnd();
+                var data = reader.ReadToEnd();
 
                 reader.Close();
                 stream.Close();
@@ -98,8 +92,8 @@ namespace LiveFlight
         }
 
         /// <summary>
-        /// Indicates whether any network connection is available.
-        /// Filter connections below a specified speed, as well as virtual network cards.
+        ///     Indicates whether any network connection is available.
+        ///     Filter connections below a specified speed, as well as virtual network cards.
         /// </summary>
         /// <param name="minimumSpeed">The minimum speed required. Passing 0 will not filter connection using speed.</param>
         /// <returns>
@@ -116,12 +110,12 @@ namespace LiveFlight
             if (!NetworkInterface.GetIsNetworkAvailable())
                 return false;
 
-            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+            foreach (var ni in NetworkInterface.GetAllNetworkInterfaces())
             {
                 // discard because of standard reasons
-                if ((ni.OperationalStatus != OperationalStatus.Up) ||
-                    (ni.NetworkInterfaceType == NetworkInterfaceType.Loopback) ||
-                    (ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel))
+                if (ni.OperationalStatus != OperationalStatus.Up ||
+                    ni.NetworkInterfaceType == NetworkInterfaceType.Loopback ||
+                    ni.NetworkInterfaceType == NetworkInterfaceType.Tunnel)
                     continue;
 
                 // this allow to filter modems, serial, etc.
@@ -130,8 +124,8 @@ namespace LiveFlight
                     continue;
 
                 // discard virtual cards (virtual box, virtual pc, etc.)
-                if ((ni.Description.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0) ||
-                    (ni.Name.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0))
+                if (ni.Description.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    ni.Name.IndexOf("virtual", StringComparison.OrdinalIgnoreCase) >= 0)
                     continue;
 
                 // discard "Microsoft Loopback Adapter", it will not show as NetworkInterfaceType.Loopback but as Ethernet Card.
@@ -140,25 +134,22 @@ namespace LiveFlight
 
                 return true;
             }
+
             return false;
         }
 
         [DataContract]
         public class VersioningFile
         {
-            [DataMember]
-            public List<VersionHistory> windows { get; set; }
+            [DataMember] public List<VersionHistory> windows { get; set; }
         }
 
         [DataContract]
         public class VersionHistory
         {
-            [DataMember]
-            public double version { get; set; }
+            [DataMember] public double version { get; set; }
 
-            [DataMember]
-            public String log { get; set;  }
+            [DataMember] public string log { get; set; }
         }
-
     }
 }

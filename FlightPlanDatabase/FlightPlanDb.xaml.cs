@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using IF_FMS;
 
 namespace FlightPlanDatabase
@@ -30,6 +31,13 @@ namespace FlightPlanDatabase
                 if (this.FplUpdated != null) { this.FplUpdated(this,null); }
             }
         }
+        
+        /* UI Elements */
+        private TextBox _txtFromICAO;
+        private TextBox _txtDestICAO;
+        private TextBlock _lblSearchMsg;
+        private TextBox _txtFplId;
+        private ComboBox _cbFpls;
 
         private Fds.IFAPI.APIFlightPlan pApiFpl;
         public Fds.IFAPI.APIFlightPlan ApiFpl
@@ -37,12 +45,26 @@ namespace FlightPlanDatabase
             get { return pApiFpl; }
             set { pApiFpl = value; }
         }
-
-
+        
         public FlightPlanDb()
         {
             InitializeComponent();
-            fpdLnk.RequestNavigate += (s, e) => { System.Diagnostics.Process.Start(e.Uri.ToString()); };
+            InitializeUiElements();
+            //fpdLnk.RequestNavigate += (s, e) => { System.Diagnostics.Process.Start(e.Uri.ToString()); };
+        }
+        
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+
+        private void InitializeUiElements()
+        {
+            _txtFromICAO = this.FindControl<TextBox>("txtFromICAO");
+            _txtDestICAO = this.FindControl<TextBox>("txtDestICAO");
+            _lblSearchMsg = this.FindControl<TextBlock>("lblSearchMsg");
+            _txtFplId = this.FindControl<TextBox>("txtFplId");
+            _cbFpls = this.FindControl<ComboBox>("cbFpls");
         }
 
         private List<FlightPlanDatabase.ApiDataTypes.FlightPlanSummary> pFplList;
@@ -52,20 +74,20 @@ namespace FlightPlanDatabase
             FlightPlanDatabase.FpdApi fd = new FlightPlanDatabase.FpdApi();
             List<FlightPlanDatabase.ApiDataTypes.FlightPlanSummary> fpls = new List<FlightPlanDatabase.ApiDataTypes.FlightPlanSummary>();
             try {
-                fpls = fd.searchFlightPlans(txtFromICAO.Text, txtDestICAO.Text);
+                fpls = fd.searchFlightPlans(_txtFromICAO.Text, _txtDestICAO.Text);
             }catch(Exception ex)
             {
                 String exmsg = ex.Message;
                 if (ex.Message.Contains(":")) { exmsg = exmsg.Split(':')[1]; }
                 if (ex.Message.Contains(")")) { exmsg = exmsg.Split(')')[1]; }
-                lblSearchMsg.Content = "Error: " + exmsg;
+                _lblSearchMsg.Text = "Error: " + exmsg;
                 return;
             }
-            cbFpls.Items.Clear();
+            _cbFpls.Items = null;
             if (fpls == null || fpls.Count < 1)
             {
-                lblSearchMsg.Content = "Suitable FPL could not be found.";
-                cbFpls.Visibility = Visibility.Collapsed;
+                _lblSearchMsg.Text = "Suitable FPL could not be found.";
+                _cbFpls.IsVisible = false;
             }
             else
             {
@@ -73,28 +95,29 @@ namespace FlightPlanDatabase
                 pFplList = fpls;
                 foreach (FlightPlanDatabase.ApiDataTypes.FlightPlanSummary f in fpls)
                 {
-                    cbFpls.Items.Add(f.id + " (" + String.Format("{0:0.00}", f.distance) + "nm - " + f.waypoints.ToString() + "wpts)");
+                    //_cbFpls.Items.Add(f.id + " (" + String.Format("{0:0.00}", f.distance) + "nm - " + f.waypoints.ToString() + "wpts)");
                 }
-                lblSearchMsg.Content = "FPL(s) found. Select below to load.";
-                cbFpls.Visibility = Visibility.Visible;
+                _lblSearchMsg.Text = "FPL(s) found. Select below to load.";
+                _cbFpls.IsVisible = true;
             }
         }
 
         private void cbFpls_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (cbFpls.Items.Count > 0 && cbFpls.SelectedValue != null)
+            /*
+            if (_cbFpls.Items. > 0 && cbFpls.SelectedValue != null)
             {
                 string fplID = cbFpls.SelectedValue.ToString().Split(' ').First();
                 loadFpdFplFromId(fplID);
                 txtFplId.Text = fplID;
-            }
+            } */
         }
 
         private void btnLoadFromId_Click(object sender, RoutedEventArgs e)
         {
-            if (txtFplId.Text.Length > 0)
+            if (_txtFplId.Text.Length > 0)
             {
-                loadFpdFplFromId(txtFplId.Text);
+                loadFpdFplFromId(_txtFplId.Text);
             }
         }
 
@@ -129,7 +152,7 @@ namespace FlightPlanDatabase
             FmsFpl = fpl;
         }
 
-        private void txtFromICAO_GotFocus(object sender, RoutedEventArgs e)
+        private void txtFromICAO_GotFocus(object sender, GotFocusEventArgs e)
         {
             TextBox tb = (TextBox)sender;
             tb.Text = string.Empty;
@@ -139,7 +162,7 @@ namespace FlightPlanDatabase
             textFieldFocused = true;
         }
 
-        private void txtDestICAO_GotFocus(object sender, RoutedEventArgs e)
+        private void txtDestICAO_GotFocus(object sender, GotFocusEventArgs e)
         {
             TextBox tb = (TextBox)sender;
             tb.Text = string.Empty;
@@ -175,7 +198,7 @@ namespace FlightPlanDatabase
             textFieldFocused = false;
         }
 
-        private void txtFplId_GotFocus(object sender, RoutedEventArgs e)
+        private void txtFplId_GotFocus(object sender, GotFocusEventArgs e)
         {
             TextBox tb = (TextBox)sender;
             tb.Text = string.Empty;

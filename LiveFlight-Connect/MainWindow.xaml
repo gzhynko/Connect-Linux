@@ -1,267 +1,252 @@
-﻿<!--
-//
-//  MainWindow.xaml
-//  LiveFlight Connect
-//
-//  Copyright © 2016 Cameron Carmichael Alonso. All rights reserved.
-//
-//  Licensed under GPL-V3.
-//  https://github.com/LiveFlightApp/Connect-Windows/blob/master/LICENSE
-//
- -->
-<Window
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:Indicators="clr-namespace:Indicators;assembly=Indicators" xmlns:IF_FMS="clr-namespace:IF_FMS;assembly=IF_FMS" xmlns:FlightPlanDatabase="clr-namespace:FlightPlanDatabase;assembly=FlightPlanDatabase" xmlns:local="clr-namespace:LiveFlight" mc:Ignorable="d" x:Name="LiveFlight_Connect" x:Class="LiveFlight.MainWindow"
-        Title="LiveFlight Connect" Height="545.333" Width="525" Loaded="PageLoaded"  ResizeMode="NoResize" Icon="LiveFlight.ico" KeyDown="keyDownEvent" KeyUp="keyUpEvent">
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:Indicators="clr-namespace:Indicators;assembly=Indicators"
+        xmlns:IF_FMS="clr-namespace:IF_FMS;assembly=IF_FMS"
+        xmlns:FlightPlanDatabase="clr-namespace:FlightPlanDatabase;assembly=FlightPlanDatabase"
+        xmlns:local="clr-namespace:LiveFlight"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        mc:Ignorable="d" Name="LiveFlight_Connect"
+        x:Class="LiveFlight.MainWindow"
+        Title="LiveFlight Connect" Height="545.333" Width="525" Opened="PageLoaded" Initialized="OnSourceInitialized"
+        CanResize="False" Icon="LiveFlight.ico" KeyDown="keyDownEvent" KeyUp="keyUpEvent">
     <Window.Resources>
-        <XmlDataProvider x:Key="KeyboardCommands"   XPath="/KeyboardCommands/*" >
-            <x:XData >
-                <KeyboardCommands xmlns="">
-                    <KeyboardCommand  Command="Pitch Up" Key="Down Arrow" />
-                    <KeyboardCommand  Command="Pitch Down" Key="Up Arrow" />
-                    <KeyboardCommand  Command="Roll Left" Key="Left Arrow" />
-                    <KeyboardCommand  Command="Roll Right" Key="Right Arrow" />
-                    <KeyboardCommand  Command="Increase Throttle" Key="D" />
-                    <KeyboardCommand  Command="Decrease Throttle" Key="C" />
-                    <KeyboardCommand  Command="" Key="" />
-                    <KeyboardCommand  Command="Landing Gear Toggle" Key="G" />
-                    <KeyboardCommand  Command="Spoilers Toggle" Key="/" />
-                    <KeyboardCommand  Command="Flaps Up" Key="[" />
-                    <KeyboardCommand  Command="Flaps Down" Key="]" />
-                    <KeyboardCommand  Command="Parking Brakes" Key="." />
-                    <KeyboardCommand  Command="" Key="" />
-                    <KeyboardCommand  Command="Previous Camera" Key="Q" />
-                    <KeyboardCommand  Command="Next Camera" Key="E" />
-                    <KeyboardCommand  Command="Move Camera Up" Key="Shift + Up Arrow" />
-                    <KeyboardCommand  Command="Move Camera Down" Key="Shift + Down Arrow" />
-                    <KeyboardCommand  Command="Move Camera Left" Key="Shift + Left Arrow" />
-                    <KeyboardCommand  Command="Move Camera Right" Key="Shift + Right Arrow" />
-                    <KeyboardCommand  Command="" Key="" />
-                    <KeyboardCommand  Command="Landing Lights Toggle" Key="L" />
-                    <KeyboardCommand  Command="Nav Lights Toggle" Key="N" />
-                    <KeyboardCommand  Command="Beacon Light Toggle" Key="B" />
-                    <KeyboardCommand  Command="Strobe Lights Toggle" Key="S" />
-                    <KeyboardCommand  Command="" Key="" />
-                    <KeyboardCommand  Command="Autopilot Toggle" Key="Z" />
-                    <KeyboardCommand  Command="Pushback Toggle" Key="P" />
-                    <KeyboardCommand  Command="Pause Toggle" Key="[Space]" />
-                    <KeyboardCommand  Command="" Key="" />
-                    <KeyboardCommand  Command="ATC Window Toggle" Key="A" />
-                    <KeyboardCommand  Command="ATC Commands" Key="Numbers [1-10]" />
-                </KeyboardCommands>
-            </x:XData>
-        </XmlDataProvider>
+        <system:Object x:Key="KeyboardCommands"/>
     </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="43*"/>
-            <ColumnDefinition Width="43*"/>
-            <ColumnDefinition Width="3*"/>
-            <ColumnDefinition Width="428"/>
+            <ColumnDefinition Width="43*" />
+            <ColumnDefinition Width="43*" />
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="428" />
         </Grid.ColumnDefinitions>
         <DockPanel>
             <Menu DockPanel.Dock="Top" Height="60" Margin="0,0,-1083,0">
                 <MenuItem Header="_Cameras">
-                    <MenuItem x:Name="nextCameraMenu" Header="_Next Camera" InputGestureText="E" Click="nextCameraMenu_Click"/>
-                    <MenuItem x:Name="previousCameraMenu" Header="_Previous Camera" InputGestureText="Q" Click="previousCameraMenu_Click"/>
+                    <MenuItem Name="nextCameraMenu" Header="_Next Camera"
+                              Click="nextCameraMenu_Click" />
+                    <MenuItem Name="previousCameraMenu" Header="_Previous Camera"
+                              Click="previousCameraMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="cockpitCameraMenu" Header="_Cockpit" Click="cockpitCameraMenu_Click"/>
-                    <MenuItem x:Name="virtualCockpitCameraMenu" Header="_Virtual Cockpit" Click="virtualCockpitCameraMenu_Click"/>
-                    <MenuItem x:Name="followCameraMenu" Header="_Follow" Click="followCameraMenu_Click"/>
-                    <MenuItem x:Name="onBoardCameraMenu" Header="_On-Board" Click="onBoardCameraMenu_Click"/>
-                    <MenuItem x:Name="fybyCameraMenu" Header="_Fly-By" Click="fybyCameraMenu_Click"/>
-                    <MenuItem x:Name="towerCameraMenu" Header="_Tower" Click="towerCameraMenu_Click"/>
+                    <MenuItem Name="cockpitCameraMenu" Header="_Cockpit" Click="cockpitCameraMenu_Click" />
+                    <MenuItem Name="virtualCockpitCameraMenu" Header="_Virtual Cockpit"
+                              Click="virtualCockpitCameraMenu_Click" />
+                    <MenuItem Name="followCameraMenu" Header="_Follow" Click="followCameraMenu_Click" />
+                    <MenuItem Name="onBoardCameraMenu" Header="_On-Board" Click="onBoardCameraMenu_Click" />
+                    <MenuItem Name="fybyCameraMenu" Header="_Fly-By" Click="fybyCameraMenu_Click" />
+                    <MenuItem Name="towerCameraMenu" Header="_Tower" Click="towerCameraMenu_Click" />
                 </MenuItem>
                 <MenuItem Header="_Controls">
-                    <MenuItem x:Name="landingGearMenu" Header="_Landing Gear" InputGestureText="G" Click="landingGearMenu_Click"/>
+                    <MenuItem Name="landingGearMenu" Header="_Landing Gear"
+                              Click="landingGearMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="spoilersMenu" Header="_Spoilers Toggle" InputGestureText="/" Click="spoilersMenu_Click"/>
+                    <MenuItem Name="spoilersMenu" Header="_Spoilers Toggle"
+                              Click="spoilersMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="flapsUpMenu" Header="_Flaps Up" InputGestureText="[" Click="flapsUpMenu_Click"/>
-                    <MenuItem x:Name="flapsDownMenu" Header="_Flaps Down" InputGestureText="]" Click="flapsDownMenu_Click"/>
+                    <MenuItem Name="flapsUpMenu" Header="_Flaps Up" Click="flapsUpMenu_Click" />
+                    <MenuItem Name="flapsDownMenu" Header="_Flaps Down"
+                              Click="flapsDownMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="parkingBrakesMenu" Header="_Parking Brakes" InputGestureText="." Click="parkingBrakesMenu_Click"/>
+                    <MenuItem Name="parkingBrakesMenu" Header="_Parking Brakes"
+                              Click="parkingBrakesMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="autopilotMenu" Header="_Autopilot Toggle" InputGestureText="Z" Click="autopilotMenu_Click"/>
-                    <MenuItem x:Name="pushbackMenu" Header="_Pushback Toggle" InputGestureText="P" Click="pushbackMenu_Click"/>
-                    <MenuItem x:Name="pauseMenu" Header="_Pause Toggle" InputGestureText="[Space]" Click="pauseMenu_Click"/>
+                    <MenuItem Name="autopilotMenu" Header="_Autopilot Toggle"
+                              Click="autopilotMenu_Click" />
+                    <MenuItem Name="pushbackMenu" Header="_Pushback Toggle"
+                              Click="pushbackMenu_Click" />
+                    <MenuItem Name="pauseMenu" Header="_Pause Toggle"
+                              Click="pauseMenu_Click" />
                 </MenuItem>
                 <MenuItem Header="_Lights">
-                    <MenuItem x:Name="landingLightsMenu" Header="_Landing Lights" InputGestureText="L" Click="landingLightsMenu_Click"/>
-                    <MenuItem x:Name="strobeLightsMenu" Header="_Strobe Lights" InputGestureText="S" Click="strobeLightsMenu_Click"/>
-                    <MenuItem x:Name="navLightsMenu" Header="_Nav Lights" InputGestureText="N" Click="navLightsMenu_Click"/>
-                    <MenuItem x:Name="beaconLightsMenu" Header="_Beacon Lights" InputGestureText="B" Click="beaconLightsMenu_Click"/>
+                    <MenuItem Name="landingLightsMenu" Header="_Landing Lights"
+                              Click="landingLightsMenu_Click" />
+                    <MenuItem Name="strobeLightsMenu" Header="_Strobe Lights"
+                              Click="strobeLightsMenu_Click" />
+                    <MenuItem Name="navLightsMenu" Header="_Nav Lights"
+                              Click="navLightsMenu_Click" />
+                    <MenuItem Name="beaconLightsMenu" Header="_Beacon Lights"
+                              Click="beaconLightsMenu_Click" />
                 </MenuItem>
                 <MenuItem Header="_Live">
-                    <MenuItem x:Name="atcWindowMenu" Header="_Toggle ATC Window" InputGestureText="A" Click="atcWindowMenu_Click"/>
+                    <MenuItem Name="atcWindowMenu" Header="_Toggle ATC Window"
+                              Click="atcWindowMenu_Click" />
                 </MenuItem>
                 <MenuItem Header="_Help">
-                    <MenuItem x:Name="joystickSetupGuideMenu" Header="_Setup Guides" Click="joystickSetupGuide"/>
-                    <MenuItem x:Name="sourceCodeMenu" Header="_Source Code (GitHub)" Click="sourceCodeMenu_Click"/>
+                    <MenuItem Name="joystickSetupGuideMenu" Header="_Setup Guides" Click="joystickSetupGuide" />
+                    <MenuItem Name="sourceCodeMenu" Header="_Source Code (GitHub)" Click="sourceCodeMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="communityMenu" Header="_Infinite Flight Community" Click="communityMenu_Click"/>
+                    <MenuItem Name="communityMenu" Header="_Infinite Flight Community" Click="communityMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="liveFlightMenu" Header="_LiveFlight Tracker" Click="liveFlightMenu_Click"/>
-                    <MenuItem x:Name="lfFacebookMenu" Header="_LiveFlight on Facebook" Click="lfFacebookMenu_Click"/>
-                    <MenuItem x:Name="lfTwitterMenu" Header="_LiveFlight on Twitter" Click="lfTwitterMenu_Click"/>
+                    <MenuItem Name="liveFlightMenu" Header="_LiveFlight Tracker" Click="liveFlightMenu_Click" />
+                    <MenuItem Name="lfFacebookMenu" Header="_LiveFlight on Facebook" Click="lfFacebookMenu_Click" />
+                    <MenuItem Name="lfTwitterMenu" Header="_LiveFlight on Twitter" Click="lfTwitterMenu_Click" />
                     <Separator />
-                    <MenuItem x:Name="aboutLfMenu" Header="_About LiveFlight Connect" Click="aboutLfMenu_Click"/>
+                    <MenuItem Name="aboutLfMenu" Header="_About LiveFlight Connect" Click="aboutLfMenu_Click" />
                 </MenuItem>
             </Menu>
-            <StackPanel/>
+            <StackPanel />
         </DockPanel>
-        <TabControl x:Name="mainTabControl" Grid.ColumnSpan="4" Height="490" VerticalAlignment="Bottom" Margin="0,0,-611,-8" SelectionChanged="tabChanged" HorizontalAlignment="Left" Width="1128">
-            <TabItem Header="Main" Height="22" VerticalAlignment="Bottom" x:Name="Main">
+        <TabControl Name="mainTabControl" Grid.ColumnSpan="4" Height="490" VerticalAlignment="Bottom"
+                    Margin="0,0,-611,-8" SelectionChanged="tabChanged" HorizontalAlignment="Left" Width="1128">
+            <TabItem Header="Main" Height="22" VerticalAlignment="Bottom" Name="Main">
                 <Grid Margin="0,0,632,-57">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="167*"/>
-                        <ColumnDefinition Width="160*"/>
-                        <ColumnDefinition Width="184*"/>
+                        <ColumnDefinition Width="167*" />
+                        <ColumnDefinition Width="160*" />
+                        <ColumnDefinition Width="184*" />
                     </Grid.ColumnDefinitions>
-                    <Label x:Name="connectedLabel" Content="Connected to Infinite Flight!" HorizontalAlignment="Left" Margin="125,25,0,0" VerticalAlignment="Top" Grid.ColumnSpan="3" FontSize="20"/>
-                    <Label x:Name="ipLabel" Content="Label" HorizontalAlignment="Center" HorizontalContentAlignment="Center" VerticalAlignment="Top" Margin="5,62,0.346,0" Grid.ColumnSpan="3" Width="508"/>
+                    <TextBlock Name="connectedLabel" HorizontalAlignment="Left" Margin="125,25,0,0"
+                               VerticalAlignment="Top" Grid.ColumnSpan="3" FontSize="20">
+                        Connected to Infinite Flight!
+                    </TextBlock>
+                    <TextBlock Name="ipLabel" HorizontalAlignment="Center" TextAlignment="Center"
+                               VerticalAlignment="Top" Margin="5,62,0.346,0" Grid.ColumnSpan="3" Width="508">
+                        Label
+                    </TextBlock>
 
-                    <Grid x:Name="airplaneStateGrid" HorizontalAlignment="Left" Height="204" VerticalAlignment="Top" Width="258" Grid.ColumnSpan="2" Margin="24,140,0,0">
+                    <Grid Name="airplaneStateGrid" HorizontalAlignment="Left" Height="204" VerticalAlignment="Top"
+                          Width="258" Grid.ColumnSpan="2" Margin="24,140,0,0">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="37*"/>
-                            <RowDefinition Height="32*"/>
-                            <RowDefinition Height="33*"/>
-                            <RowDefinition Height="31*"/>
-                            <RowDefinition Height="27*"/>
-                            <RowDefinition Height="45*"/>
+                            <RowDefinition Height="37*" />
+                            <RowDefinition Height="32*" />
+                            <RowDefinition Height="33*" />
+                            <RowDefinition Height="31*" />
+                            <RowDefinition Height="27*" />
+                            <RowDefinition Height="45*" />
 
-                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="82*"/>
-                            <ColumnDefinition Width="48*"/>
-                            <ColumnDefinition Width="129*"/>
+                            <ColumnDefinition Width="82*" />
+                            <ColumnDefinition Width="48*" />
+                            <ColumnDefinition Width="129*" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock TextWrapping="Wrap" Text="Airspeed" Margin="2" Grid.ColumnSpan="2"/>
-                        <TextBlock TextWrapping="Wrap" Text="Altitude" Margin="2" Grid.Row="1" Grid.ColumnSpan="2"/>
-                        <TextBlock TextWrapping="Wrap" Text="Heading" Margin="2" Grid.Row="2" Grid.ColumnSpan="2"/>
-                        <TextBlock TextWrapping="Wrap" Text="Vertical Speed" Margin="2" Grid.Row="3" Grid.ColumnSpan="2"/>
-                        <TextBlock x:Name="txtLandingRollLabel" TextWrapping="Wrap" Text="Landing Roll" Margin="2" Grid.Row="4" Grid.ColumnSpan="2" Visibility="Hidden"/>
-                        <TextBlock TextWrapping="Wrap" Text="{Binding IndicatedAirspeedKts, StringFormat=\{0:#0\} kts}" Margin="2" Grid.Column="2"/>
-                        <TextBlock TextWrapping="Wrap" Text="{Binding AltitudeMSL, StringFormat=\{0:#0\} ft}" Margin="2" Grid.Row="1" Grid.Column="2"/>
-                        <TextBlock TextWrapping="Wrap" Text="{Binding HeadingMagnetic, StringFormat=\{0:#0\} °}" Margin="2" Grid.Row="2" Grid.Column="2"/>
-                        <TextBlock TextWrapping="Wrap" Text="{Binding VerticalSpeed, StringFormat=\{0:#0\} ft/min}" Margin="2" Grid.Row="3" Grid.Column="2"/>
-                        <TextBlock x:Name="txtLandingRoll" TextWrapping="Wrap" Text="" Margin="2" Grid.Row="4" Grid.Column="2" Visibility="Hidden"/>
+                        <TextBlock TextWrapping="Wrap" Text="Airspeed" Margin="2" Grid.ColumnSpan="2" />
+                        <TextBlock TextWrapping="Wrap" Text="Altitude" Margin="2" Grid.Row="1" Grid.ColumnSpan="2" />
+                        <TextBlock TextWrapping="Wrap" Text="Heading" Margin="2" Grid.Row="2" Grid.ColumnSpan="2" />
+                        <TextBlock TextWrapping="Wrap" Text="Vertical Speed" Margin="2" Grid.Row="3"
+                                   Grid.ColumnSpan="2" />
+                        <TextBlock Name="txtLandingRollLabel" TextWrapping="Wrap" Text="Landing Roll" Margin="2"
+                                   Grid.Row="4" Grid.ColumnSpan="2" IsVisible="False" />
+                        <TextBlock TextWrapping="Wrap" Text="{Binding IndicatedAirspeedKts, StringFormat=\{0:#0\} kts}"
+                                   Margin="2" Grid.Column="2" />
+                        <TextBlock TextWrapping="Wrap" Text="{Binding AltitudeMSL, StringFormat=\{0:#0\} ft}"
+                                   Margin="2" Grid.Row="1" Grid.Column="2" />
+                        <TextBlock TextWrapping="Wrap" Text="{Binding HeadingMagnetic, StringFormat=\{0:#0\} °}"
+                                   Margin="2" Grid.Row="2" Grid.Column="2" />
+                        <TextBlock TextWrapping="Wrap" Text="{Binding VerticalSpeed, StringFormat=\{0:#0\} ft/min}"
+                                   Margin="2" Grid.Row="3" Grid.Column="2" />
+                        <TextBlock Name="txtLandingRoll" TextWrapping="Wrap" Text="" Margin="2" Grid.Row="4"
+                                   Grid.Column="2" IsVisible="False" />
                     </Grid>
-                    <Indicators:AttitudeIndicator x:Name="AttitudeIndicator" Height="Auto" Width="Auto" Grid.Column="1" Margin="56,77,-10.654,150" Grid.ColumnSpan="2" RenderTransformOrigin="0.5,0.5">
+                    <!--<Indicators:AttitudeIndicator Name="AttitudeIndicator" Height="Auto" Width="Auto" Grid.Column="1"
+                                                  Margin="56,77,-10.654,150" Grid.ColumnSpan="2"
+                                                  RenderTransformOrigin="0.5,0.5">
                         <Indicators:AttitudeIndicator.RenderTransform>
                             <TransformGroup>
-                                <ScaleTransform ScaleX="0.75" ScaleY="0.75"/>
-                                <SkewTransform/>
-                                <RotateTransform/>
-                                <TranslateTransform/>
+                                <ScaleTransform ScaleX="0.75" ScaleY="0.75" />
+                                <SkewTransform />
+                                <RotateTransform />
+                                <TranslateTransform />
                             </TransformGroup>
                         </Indicators:AttitudeIndicator.RenderTransform>
-                    </Indicators:AttitudeIndicator>
-                    <Label x:Name="yourAircraft" Content="Your Aircraft:&#xA;" HorizontalAlignment="Left" Margin="21,115,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="179" Height="35" FontWeight="Bold"/>
+                    </Indicators:AttitudeIndicator>-->
+                    <TextBlock Name="yourAircraft" Text="Your Aircraft:&#xA;" HorizontalAlignment="Left"
+                               Margin="21,115,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="179" Height="35"
+                               FontWeight="Bold" />
                     <Separator Margin="21,327,10.346,158" Grid.ColumnSpan="3" />
                     <Separator Margin="16,88,16.346,391" Grid.ColumnSpan="3" />
-                    <Label x:Name="needHelpLabel" Content="Need help getting started?&#xA;" HorizontalAlignment="Left" Margin="15,354,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="35" Width="194" FontWeight="Bold"/>
-                    <Label x:Name="label" Content="Axes and buttons need to be assigned in the Controls &#xA;tab in Infinite Flight settings." HorizontalAlignment="Left" Margin="15,378,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="43" Width="304"/>
-                    <Button x:Name="joystickSetupGuideButton" Content="Joystick Setup Guide&#xA;" Grid.Column="2" HorizontalAlignment="Left" Margin="21.374,389,0,0" VerticalAlignment="Top" Width="142" Height="22" Click="joystickSetupGuide"/>
-                    <Label x:Name="label2" Content="Check out the LiveFlight joystick setup guide!" HorizontalAlignment="Left" Margin="15,420,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Width="267"/>
-                    <Expander x:Name="expander" Header="Expand" Grid.Column="2" Margin="147,0,-592,53" ExpandDirection="Right" IsExpanded="False" Expanded="expander_Expanded" Collapsed="expander_Collapsed">
+                    <TextBlock Name="needHelpLabel" Text="Need help getting started?&#xA;" HorizontalAlignment="Left"
+                               Margin="15,354,0,0" VerticalAlignment="Top" Grid.ColumnSpan="2" Height="35" Width="194"
+                               FontWeight="Bold" />
+                    <TextBlock Name="label"
+                               Text="Axes and buttons need to be assigned in the Controls &#xA;tab in Infinite Flight settings."
+                               HorizontalAlignment="Left" Margin="15,378,0,0" VerticalAlignment="Top"
+                               Grid.ColumnSpan="2" Height="43" Width="304" />
+                    <Button Name="joystickSetupGuideButton" Content="Joystick Setup Guide&#xA;" Grid.Column="2"
+                            HorizontalAlignment="Left" Margin="21.374,389,0,0" VerticalAlignment="Top" Width="142"
+                            Height="22" Click="joystickSetupGuide" />
+                    <TextBlock Name="label2" Text="Check out the LiveFlight joystick setup guide!"
+                               HorizontalAlignment="Left" Margin="15,420,0,0" VerticalAlignment="Top"
+                               Grid.ColumnSpan="2" Width="267" />
+                    <Expander Name="expander" Header="Expand" Grid.Column="2" Margin="147,0,-592,53"
+                              ExpandDirection="Right" IsExpanded="False" KeyDown="expander_Clicked"
+                              PointerPressed="expander_Pressed">
                         <Canvas>
-                            <IF_FMS:AircraftStatus x:Name="AircraftStateControl" VerticalAlignment="Top" Height="412" Width="293" HorizontalAlignment="Left" Margin="10,10,0,0"/>
-                            <local:LandingStats x:Name="landingDetails" Canvas.Left="303" Canvas.Top="114" Height="278" Width="264"/>
-
+                            <IF_FMS:AircraftStatus Name="AircraftStateControl" VerticalAlignment="Top" Height="412"
+                                                   Width="293" HorizontalAlignment="Left" Margin="10,10,0,0" />
+                            <local:LandingStats Name="landingDetails" Canvas.Left="303" Canvas.Top="114" Height="278"
+                                                Width="264" />
                         </Canvas>
                     </Expander>
 
                 </Grid>
             </TabItem>
 
-            <TabItem x:Name="TabItem_ATC" Header="ATC" Margin="-2,0">
+            <TabItem Name="TabItem_ATC" Header="ATC" Margin="-2,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="44*"/>
-                        <ColumnDefinition Width="469*"/>
+                        <ColumnDefinition Width="44*" />
+                        <ColumnDefinition Width="469*" />
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="455*"/>
-                        <RowDefinition Height="31*"/>
+                        <RowDefinition Height="455*" />
+                        <RowDefinition Height="31*" />
                     </Grid.RowDefinitions>
-                    <DataGrid x:Name="atcMessagesDataGrid" SelectionChanged="atcMessagesDataGrid_SelectionChanged"  ColumnWidth="*" Grid.ColumnSpan="2" />
+                    <DataGrid Name="atcMessagesDataGrid" SelectionChanged="atcMessagesDataGrid_SelectionChanged"
+                              ColumnWidth="*" Grid.ColumnSpan="2" />
                 </Grid>
             </TabItem>
 
 
-
-            <!--<TabItem Header="Mouse" d:IsHidden="True">
-                <Grid>
-                    <Label Content="Mouse Pad" Margin="0" x:Name="captureMouseButton" PreviewMouseMove="captureMouseButton_PreviewMouseMove" PreviewMouseUp="captureMouseButton_PreviewMouseUp" PreviewMouseDown="captureMouseButton_PreviewMouseDown"/>
-                </Grid>
-            </TabItem>-->
-            <!--<TabItem Header="Autopilot">
-                <Grid Margin="5">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="25*"/>
-                        <RowDefinition Height="25*"/>
-                        <RowDefinition Height="25*"/>
-                        <RowDefinition Height="25*"/>
-                        <RowDefinition Height="25*"/>
-                        <RowDefinition Height="399*"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="110*"/>
-                        <ColumnDefinition Width="401*"/>
-                    </Grid.ColumnDefinitions>
-                    <CheckBox VerticalAlignment="Center" Content="Altitude" x:Name="altitudeStateCheckbox" Click="checkbox_Checked"/>
-                    <CheckBox VerticalAlignment="Center" Content="Heading" x:Name="headingStateCheckbox" Grid.Row="1" Click="checkbox_Checked"/>
-                    <CheckBox VerticalAlignment="Center" Content="VS" x:Name="verticalSpeedStateCheckbox" Grid.Row="2" Click="checkbox_Checked"/>
-                    <CheckBox VerticalAlignment="Center" Content="Speed" x:Name="speedStateCheckbox" Grid.Row="3" Click="checkbox_Checked"/>
-                    <CheckBox VerticalAlignment="Center" Content="APPR" x:Name="apprStateCheckbox" Grid.Row="4" Click="checkbox_Checked"/>
-
-                    <TextBox x:Name="altitudeTextBlock" Grid.Column="2" Margin="2" TextChanged="speedTextBlock_TextChanged"/>
-                    <TextBox x:Name="headingTextBlock" Grid.Column="2" Grid.Row="1" Margin="2" TextChanged="speedTextBlock_TextChanged"/>
-                    <TextBox x:Name="verticalSpeedTextBlock" Grid.Column="2" Grid.Row="2" Margin="2" TextChanged="speedTextBlock_TextChanged"/>
-                    <TextBox x:Name="speedTextBlock" Grid.Column="2" Grid.Row="3" Margin="2" TextChanged="speedTextBlock_TextChanged"/>
-                </Grid>
-            </TabItem>-->
-
-
-            <TabItem x:Name="___TabItem___Keyboard_Commands_" Header="Keyboard Commands" Margin="-2,0">
+            <TabItem Name="___TabItem___Keyboard_Commands_" Header="Keyboard Commands" Margin="-2,0">
                 <Grid DataContext="{Binding Source={StaticResource KeyboardCommands}}">
-                    <DataGrid HorizontalAlignment="Stretch" ColumnWidth="*" Margin="10,10,10,82" VerticalAlignment="Stretch"  ItemsSource="{Binding Mode=Default, XPath=/KeyboardCommands/KeyboardCommand}" AutoGenerateColumns="False" IsReadOnly="True">
+                    <DataGrid HorizontalAlignment="Stretch" ColumnWidth="*" Margin="10,10,10,82"
+                              VerticalAlignment="Stretch"
+                              AutoGenerateColumns="False" IsReadOnly="True"><!--Items="{Binding Mode=Default, Path=/KeyboardCommands/KeyboardCommand}"-->
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="Command" Binding="{Binding XPath=@Command}"/>
-                            <DataGridTextColumn Header="Key" Binding="{Binding XPath=@Key}"/>
+                            <DataGridTextColumn Header="Command" Binding="{Binding}" />
+                            <DataGridTextColumn Header="Key" Binding="{Binding}" />
                         </DataGrid.Columns>
                     </DataGrid>
-                    <Label x:Name="keyboardInfo" Content="1) Open the Controls tab in Infinite Flight settings&#xA;2) Tap on 'Roll', then press and hold the left or right arrow keys.&#xA;3) Repeat for Pitch and Throttle, using the Up/Down or D/C keys." HorizontalAlignment="Left" Margin="10,394,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.026,0.49"/>
-                    <Label x:Name="label1" Content="To control Pitch, Roll and Throttle using keyboard:&#xA;" HorizontalAlignment="Left" Margin="10,377,0,0" VerticalAlignment="Top" FontWeight="Bold"/>
+                    <TextBlock Name="keyboardInfo"
+                               Text="1) Open the Controls tab in Infinite Flight settings&#xA;2) Tap on 'Roll', then press and hold the left or right arrow keys.&#xA;3) Repeat for Pitch and Throttle, using the Up/Down or D/C keys."
+                               HorizontalAlignment="Left" Margin="10,394,0,0" VerticalAlignment="Top"
+                               RenderTransformOrigin="-0.026,0.49" />
+                    <TextBlock Name="label1" Text="To control Pitch, Roll and Throttle using keyboard:&#xA;"
+                               HorizontalAlignment="Left" Margin="10,377,0,0" VerticalAlignment="Top" FontWeight="Bold" />
                 </Grid>
             </TabItem>
 
 
-            <TabItem x:Name="___TabItem___AutoNav_" Header="AutoNav">
+            <TabItem Name="___TabItem___AutoNav_" Header="AutoNav">
                 <Grid>
-                    <IF_FMS:FMS x:Name="FMSControl" Margin="10,10,112,30"/>
+                    <IF_FMS:FMS Name="FMSControl" Margin="10,10,112,30" />
                 </Grid>
 
             </TabItem>
 
 
-            <TabItem x:Name="___TabItem___FlightPlanDatabase_" Header="Flight Plans" >
+            <TabItem Name="___TabItem___FlightPlanDatabase_" Header="Flight Plans">
                 <Grid>
-                    <FlightPlanDatabase:FlightPlanDb x:Name="FpdControl" HorizontalAlignment="Left" Height="433" Margin="10,0,0,0" VerticalAlignment="Top" Width="302" FplUpdated="FlightPlanDb_FplUpdated"/>
+                    <FlightPlanDatabase:FlightPlanDb Name="FpdControl" HorizontalAlignment="Left" Height="433"
+                                                     Margin="10,0,0,0" VerticalAlignment="Top" Width="302"
+                                                     FplUpdated="FlightPlanDb_FplUpdated" />
                 </Grid>
             </TabItem>
-
 
 
         </TabControl>
 
-        <Grid x:Name="overlayGrid" Grid.ColumnSpan="4" d:IsHidden="True">
-            <Rectangle Fill="#E0000000"/>
-            <TextBlock Text="Connecting to Infinite Flight..." Foreground="White" HorizontalAlignment="Center" Height="50" FontSize="16"/>
-            <TextBlock x:Name="textBlock" HorizontalAlignment="Center" Margin="36,269,10,0" TextAlignment="Center" TextWrapping="Wrap" Text="Make sure the device running Infinite Flight is on the same WiFi network and has &quot;Infinite Flight Connect&quot;enabled in settings." VerticalAlignment="Top" Foreground="White"/>
+        <Grid Name="overlayGrid" Grid.ColumnSpan="4" d:IsHidden="True">
+            <Rectangle Fill="#E0000000" />
+            <TextBlock Text="Connecting to Infinite Flight..." Foreground="White" HorizontalAlignment="Center"
+                       Height="50" FontSize="16" />
+            <TextBlock Name="textBlock" HorizontalAlignment="Center" Margin="36,269,10,0" TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Text="Make sure the device running Infinite Flight is on the same WiFi network and has &quot;Infinite Flight Connect&quot;enabled in settings."
+                       VerticalAlignment="Top" Foreground="White" />
         </Grid>
 
     </Grid>

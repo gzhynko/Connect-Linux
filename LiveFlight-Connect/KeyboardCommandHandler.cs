@@ -11,256 +11,145 @@
 
 
 using System;
-using System.Windows.Input;
+using Avalonia.Input;
 
 namespace LiveFlight
 {
-    class KeyboardCommandHandler
+    internal class KeyboardCommandHandler
     {
-
-        static bool shiftModifierDown = false;
+        private static bool shiftModifierDown;
         public static bool keyboardCommandsDisabled = true;
 
-        static Commands commands = MainWindow.commands;
- 
-        public static void keyPressed(System.Windows.Input.Key keyData)
-        {
+        private static readonly Commands commands = MainWindow.Commands;
 
+        public static void keyPressed(Key keyData)
+        {
             if (keyboardCommandsDisabled != true)
             {
-
                 // Check modifier keys
-                if (keyData == Key.LeftShift || keyData == Key.RightShift)
-                {
-                    shiftModifierDown = true;
-                }
+                if (keyData == Key.LeftShift || keyData == Key.RightShift) shiftModifierDown = true;
 
 
                 //ATC
-                if (keyData == System.Windows.Input.Key.D1)
-                {
+                if (keyData == Key.D1)
                     commands.atc1();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D2)
-                {
+                else if (keyData == Key.D2)
                     commands.atc2();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D3)
-                {
+                else if (keyData == Key.D3)
                     commands.atc3();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D4)
-                {
+                else if (keyData == Key.D4)
                     commands.atc4();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D5)
-                {
+                else if (keyData == Key.D5)
                     commands.atc5();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D6)
-                {
+                else if (keyData == Key.D6)
                     commands.atc6();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D7)
-                {
+                else if (keyData == Key.D7)
                     commands.atc7();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D8)
-                {
+                else if (keyData == Key.D8)
                     commands.atc8();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D9)
-                {
+                else if (keyData == Key.D9)
                     commands.atc9();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D0)
-                {
+                else if (keyData == Key.D0)
                     commands.atc10();
-
-                }
-                else if (keyData == System.Windows.Input.Key.A)
-                {
+                else if (keyData == Key.A)
                     //toggle atc window
                     commands.atcMenu();
-                }
 
                 //flight controls
-                if (keyData == System.Windows.Input.Key.G)
-                {
+                if (keyData == Key.G)
                     //toggle landing gear
                     commands.landingGear();
-                }
-                else if (keyData == System.Windows.Input.Key.P)
-                {
+                else if (keyData == Key.P)
                     //shift + p
                     //pushback
                     commands.pushback();
-                }
-                else if (keyData == System.Windows.Input.Key.Space)
-                {
+                else if (keyData == Key.Space)
                     //pause
                     commands.pause();
-
-                }
-                else if (keyData == System.Windows.Input.Key.OemPeriod)
-                {
+                else if (keyData == Key.OemPeriod)
                     //brake
                     commands.parkingBrake();
-                }
-                else if (keyData == System.Windows.Input.Key.OemOpenBrackets)
-                {
+                else if (keyData == Key.OemOpenBrackets)
                     //retract flaps
                     commands.flapsUp();
-                }
 
-                else if (keyData == System.Windows.Input.Key.OemCloseBrackets)
-                {
+                else if (keyData == Key.OemCloseBrackets)
                     //extend flaps
                     commands.flapsDown();
-                }
-                else if (keyData == System.Windows.Input.Key.OemQuestion)
-                {
+                else if (keyData == Key.OemQuestion)
                     //spoilers
                     commands.spoilers();
-                }
-                else if (keyData == System.Windows.Input.Key.L)
-                {
+                else if (keyData == Key.L)
                     //kanding lights
                     commands.landing();
-                }
-                else if (keyData == System.Windows.Input.Key.S)
-                {
+                else if (keyData == Key.S)
                     //strobe
                     commands.strobe();
-                }
-                else if (keyData == System.Windows.Input.Key.N)
-                {
+                else if (keyData == Key.N)
                     //nav
                     commands.nav();
-                }
-                else if (keyData == System.Windows.Input.Key.B)
-                {
+                else if (keyData == Key.B)
                     //beacon
                     commands.beacon();
-                }
-                else if (keyData == System.Windows.Input.Key.Z)
-                {
+                else if (keyData == Key.Z)
                     //toggle autopilot
                     commands.autopilot();
-                }
-                else if (keyData == System.Windows.Input.Key.OemMinus)
-                {
+                else if (keyData == Key.OemMinus)
                     //zoomout
                     commands.zoomOut();
-                }
-                else if (keyData == System.Windows.Input.Key.OemPlus)
-                {
+                else if (keyData == Key.OemPlus)
                     //zoomout
                     commands.zoomIn();
-                }
-                else if ((keyData == System.Windows.Input.Key.Up) && shiftModifierDown)
-                {
+                else if (keyData == Key.Up && shiftModifierDown)
                     //move up
                     commands.movePOV(0);
-
-                }
-                else if ((keyData == System.Windows.Input.Key.Down) && shiftModifierDown)
-                {
+                else if (keyData == Key.Down && shiftModifierDown)
                     //move down
                     commands.movePOV(18000);
-
-                }
-                else if ((keyData == System.Windows.Input.Key.Left) && shiftModifierDown)
-                {
+                else if (keyData == Key.Left && shiftModifierDown)
                     //move left
                     commands.movePOV(27000);
-
-                }
-                else if ((keyData == System.Windows.Input.Key.Right) && shiftModifierDown)
-                {
+                else if (keyData == Key.Right && shiftModifierDown)
                     //move right
                     commands.movePOV(9000);
-
-                }
-                else if (keyData == System.Windows.Input.Key.Up)
-                {
+                else if (keyData == Key.Up)
                     //move pitch down
                     commands.pitchDown();
-
-                }
-                else if (keyData == System.Windows.Input.Key.Down)
-                {
+                else if (keyData == Key.Down)
                     //move pitch up
                     commands.pitchUp();
-
-                }
-                else if (keyData == System.Windows.Input.Key.Left)
-                {
+                else if (keyData == Key.Left)
                     //move roll left
                     commands.rollLeft();
-
-                }
-                else if (keyData == System.Windows.Input.Key.Right)
-                {
+                else if (keyData == Key.Right)
                     //move roll right
                     commands.rollRight();
-
-                }
-                else if (keyData == System.Windows.Input.Key.D)
-                {
+                else if (keyData == Key.D)
                     //increase throttle
                     commands.increaseThrottle();
-
-                }
-                else if (keyData == System.Windows.Input.Key.C)
-                {
+                else if (keyData == Key.C)
                     //decrease throttle
                     commands.decreaseThrottle();
-
-                }
-                else if (keyData == System.Windows.Input.Key.E)
-                {
+                else if (keyData == Key.E)
                     //Next Camera
                     commands.nextCamera();
-                }
-                else if (keyData == System.Windows.Input.Key.Q)
-                {
+                else if (keyData == Key.Q)
                     //previous Camera
                     commands.previousCamera();
-                }
-
             }
             else
             {
-
                 Console.WriteLine("Ignoring keyboard command input...");
-
             }
         }
 
         // key UP
-        public static void keyUp(System.Windows.Input.Key keyData)
+        public static void keyUp(Key keyData)
         {
-
             // stop moving POV
             commands.movePOV(-1);
 
-            if (keyData == Key.LeftShift || keyData == Key.RightShift)
-            {
-                shiftModifierDown = false;
-            }
-
+            if (keyData == Key.LeftShift || keyData == Key.RightShift) shiftModifierDown = false;
         }
-
-
     }
 }

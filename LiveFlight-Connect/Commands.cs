@@ -11,73 +11,23 @@
 
 using System;
 using Fds.IFAPI;
-using IFConnect;
 
 namespace LiveFlight
 {
     public class Commands
     {
-        IFConnectorClient client = LiveFlight.MainWindow.client;
+        private readonly IFConnect.IFConnectorClient client = MainWindow.Client;
 
-        int viewUpId = 0;
-        int viewDownId = 18000;
-        int viewLeftId = 27000;
-        int viewRightId = 9000;
+        private readonly int keyboardDelta = 100;
+        private int pitchValue;
+        private int rollValue;
+        private readonly int throttleDelta = 50;
+        private int throttleValue;
+        private readonly int viewDownId = 18000;
+        private readonly int viewLeftId = 27000;
+        private readonly int viewRightId = 9000;
 
-        int keyboardDelta = 100;
-        int throttleDelta = 50;
-        int pitchValue = 0;
-        int rollValue = 0;
-        int throttleValue = 0;
-
-        #region JoystickCommands
-
-        public void movedJoystickAxis(int axis, int value)
-        {
-
-            if (axis == 0)
-            {
-                //pitch
-                pitchValue = value;
-            }
-            else if (axis == 1)
-            {
-                //roll
-                rollValue = value;
-            }
-            else if (axis == 3)
-            {
-                //throttle
-                throttleValue = value;
-            }
-
-            client.ExecuteCommand("NetworkJoystick.SetAxisValue", new CallParameter[]
-                {
-                new CallParameter
-                {
-                    Name = axis.ToString(),
-                    Value = value.ToString()
-                }
-             });
-        }
-
-        public void joystickButtonChanged(int button, String state)
-        {
-
-            client.ExecuteCommand("NetworkJoystick.SetButtonState", new CallParameter[]
-                {
-                new CallParameter
-                {
-                    Name = button.ToString(),
-                    Value = state
-                }
-             });
-
-            Console.WriteLine("Sent button {0} state: {1}", button, state);
-
-        }
-
-        #endregion
+        private readonly int viewUpId = 0;
 
 
         public void previousCamera()
@@ -188,20 +138,19 @@ namespace LiveFlight
             }
 
 
-            client.ExecuteCommand("NetworkJoystick.SetPOVState", new CallParameter[]
+            client.ExecuteCommand("NetworkJoystick.SetPOVState", new[]
+            {
+                new CallParameter
                 {
-                            new CallParameter
-                            {
-                                Name = "X",
-                                Value = xValue.ToString()
-                            },
-                            new CallParameter
-                            {
-                                Name = "Y",
-                                Value = yValue.ToString()
-                            }
-                });
-
+                    Name = "X",
+                    Value = xValue.ToString()
+                },
+                new CallParameter
+                {
+                    Name = "Y",
+                    Value = yValue.ToString()
+                }
+            });
         }
 
         public void reverseThrust()
@@ -285,7 +234,8 @@ namespace LiveFlight
         public void autopilotHeading(string heading)
         {
             Console.WriteLine("Changing heading to {0}...", heading);
-            client.ExecuteCommand("Commands.Autopilot.SetHeading", new CallParameter[] { new CallParameter { Name = "Heading", Value = heading } });
+            client.ExecuteCommand("Commands.Autopilot.SetHeading",
+                new[] {new CallParameter {Name = "Heading", Value = heading}});
         }
 
         public void atc1()
@@ -367,43 +317,82 @@ namespace LiveFlight
         {
             Console.WriteLine("Roll left...");
             //client.ExecuteCommand("Commands.RollLeft");
-            movedJoystickAxis(1, (rollValue - keyboardDelta));
+            movedJoystickAxis(1, rollValue - keyboardDelta);
         }
 
         public void rollRight()
         {
             Console.WriteLine("Roll right...");
             //client.ExecuteCommand("Commands.RollRight");
-            movedJoystickAxis(1, (rollValue + keyboardDelta));
+            movedJoystickAxis(1, rollValue + keyboardDelta);
         }
 
         public void pitchUp()
         {
             Console.WriteLine("Pitch Up...");
             //client.ExecuteCommand("Commands.PitchUp");
-            movedJoystickAxis(0, (pitchValue + keyboardDelta));
+            movedJoystickAxis(0, pitchValue + keyboardDelta);
         }
 
         public void pitchDown()
         {
             Console.WriteLine("PitchDown...");
             //client.ExecuteCommand("Commands.PitchDown");
-            movedJoystickAxis(0, (pitchValue - keyboardDelta));
+            movedJoystickAxis(0, pitchValue - keyboardDelta);
         }
 
         public void increaseThrottle()
         {
             Console.WriteLine("ThrottleUpCommand...");
             //client.ExecuteCommand("Commands.ThrottleUpCommand");
-            movedJoystickAxis(3, (throttleValue - throttleDelta));
+            movedJoystickAxis(3, throttleValue - throttleDelta);
         }
 
         public void decreaseThrottle()
         {
             Console.WriteLine("ThrottleDownCommand...");
             //client.ExecuteCommand("Commands.ThrottleDownCommand");
-            movedJoystickAxis(3, (throttleValue + throttleDelta));
+            movedJoystickAxis(3, throttleValue + throttleDelta);
         }
 
+        #region JoystickCommands
+
+        public void movedJoystickAxis(int axis, int value)
+        {
+            if (axis == 0)
+                //pitch
+                pitchValue = value;
+            else if (axis == 1)
+                //roll
+                rollValue = value;
+            else if (axis == 3)
+                //throttle
+                throttleValue = value;
+
+            client.ExecuteCommand("NetworkJoystick.SetAxisValue", new[]
+            {
+                new CallParameter
+                {
+                    Name = axis.ToString(),
+                    Value = value.ToString()
+                }
+            });
+        }
+
+        public void joystickButtonChanged(int button, string state)
+        {
+            client.ExecuteCommand("NetworkJoystick.SetButtonState", new[]
+            {
+                new CallParameter
+                {
+                    Name = button.ToString(),
+                    Value = state
+                }
+            });
+
+            Console.WriteLine("Sent button {0} state: {1}", button, state);
+        }
+
+        #endregion
     }
 }

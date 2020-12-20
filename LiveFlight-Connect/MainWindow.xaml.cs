@@ -1,183 +1,284 @@
-﻿//
-//  
-//  LiveFlight Connect
-//
-//  mainwindow.xaml.cs
-//  Copyright © 2016 Cameron Carmichael Alonso. All rights reserved.
-//
-//  Licensed under GPL-V3.
-//  https://github.com/LiveFlightApp/Connect-Windows/blob/master/LICENSE
-//
-
-using Fds.IFAPI;
 using System;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using IFConnect;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using Fds.IFAPI;
+using FlightPlanDatabase;
+using IF_FMS;
 using Indicators;
-using System.Windows.Interop;
-using System.Windows.Threading;
-using System.IO;
-using System.Globalization;
-using System.Text.RegularExpressions;
-using Sharpbrake.Client;
+using MessageBox.Avalonia;
+using MessageBox.Avalonia.Enums;
 
 namespace LiveFlight
 {
-
-    public partial class MainWindow : Window
+    public class MainWindow : Window
     {
-        public static IFConnectorClient client = new IFConnectorClient();
-        public static Commands commands = new Commands();
-        JoystickHelper joystickClient = new JoystickHelper();
-        BroadcastReceiver receiver = new BroadcastReceiver();
-        AirbrakeNotifier airbrake;
+        public static IFConnect.IFConnectorClient Client = new IFConnect.IFConnectorClient();
+        public static Commands Commands = new Commands();
 
-        private APIAircraftState pAircraftState = new APIAircraftState();
-        private APIAutopilotState pAutopilotState = new APIAutopilotState();
-        private bool connectionStatus;
+        /* UI Elements */
+        private Grid _airplaneStateGrid;
+        private DataGrid _atcMessagesDataGrid;
+        private bool _connectionStatus;
+        private Expander _expander;
+        private bool _expanderExpanded;
+        private TextBlock _ipLabel;
+        private readonly JoystickHelper _joystickClient = new JoystickHelper();
+        private TabControl _mainTabControl;
+        private Grid _overlayGrid;
+        private TabItem _TabItem_ATC;
+        private LandingStats _landingDetails;
+        private FMS _FMSControl;
+        private AttitudeIndicator _AttitudeIndicator;
+        private AircraftStatus _AircraftStateControl;
+        private FlightPlanDb _FpdControl;
+
+        private APIAircraftState _pAircraftState = new APIAircraftState();
+        private APIAutopilotState _pAutopilotState = new APIAutopilotState();
+        private Coordinate _pLandingLocation;
+        private LandingStats _pLandingStatDlg;
+        private double _pLastLandingRoll;
+
+        private APIAircraftState _pLastState, _pStateJustBeforeTouchdown, _pStateJustAfterTouchdown;
+        private readonly BroadcastReceiver _receiver = new BroadcastReceiver();
+        private TextBlock _txtLandingRoll;
+        private TextBlock _txtLandingRollLabel;
 
         public MainWindow()
         {
             InitializeComponent();
+            InitializeUiElements();
 
-            airplaneStateGrid.DataContext = null;
-            airplaneStateGrid.DataContext = new APIAircraftState();
+            _airplaneStateGrid.DataContext = null;
+            _airplaneStateGrid.DataContext = new APIAircraftState();
 
-            mainTabControl.Visibility = System.Windows.Visibility.Collapsed;
+            _mainTabControl.IsVisible = true;
+            _overlayGrid.IsVisible = false;
 
-            // Airbrake
-            airbrake = new AirbrakeNotifier(new AirbrakeConfig
-            {
-                ProjectId = AirbrakeConfiguration.ProjectID,
-                ProjectKey = AirbrakeConfiguration.ProjectKey
-            });
-            System.AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
+            AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionTrapper;
 
             // log to file
-            string path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            var pathToFile = String.Format("{0}\\LiveFlight_Connect_Windows.log", path);
+            var path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var pathToFile = string.Format("{0}\\LiveFlight_Connect_Windows.log", path);
             Console.WriteLine(pathToFile);
             File.Delete(pathToFile);
-            FileStream filestream = new FileStream(pathToFile, FileMode.Create);
+            var filestream = new FileStream(pathToFile, FileMode.Create);
             var streamwriter = new StreamWriter(filestream);
             streamwriter.AutoFlush = true;
-            Console.SetOut(streamwriter);
-            Console.SetError(streamwriter);
+            //Console.SetOut(streamwriter);
+            //Console.SetError(streamwriter);
 
-            Console.WriteLine("LiveFlight Connect\n\nPlease send this log to contact@liveflightapp.com if you experience issues. Thanks!\n\n\n");
-
+            Console.WriteLine(
+                "LiveFlight Connect\n\nPlease send this log to contact@liveflightapp.com if you experience issues. Thanks!\n\n\n");
+        }
+        
+        // Not Tested
+        private void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
+        {
+            Console.WriteLine(e.ExceptionObject);
         }
 
-        void UnhandledExceptionTrapper(object sender, UnhandledExceptionEventArgs e)
+        private void InitializeComponent()
         {
-            airbrake.NotifyAsync(e.ExceptionObject as System.Exception);
-            MessageBox.Show(e.ExceptionObject.ToString());
+            AvaloniaXamlLoader.Load(this);
+        }
+
+        private void InitializeUiElements()
+        {
+            _airplaneStateGrid = this.FindControl<Grid>("airplaneStateGrid");
+            _overlayGrid = this.FindControl<Grid>("overlayGrid");
+            _atcMessagesDataGrid = this.FindControl<DataGrid>("atcMessagesDataGrid");
+            _ipLabel = this.FindControl<TextBlock>("ipLabel");
+            _txtLandingRoll = this.FindControl<TextBlock>("txtLandingRoll");
+            _txtLandingRollLabel = this.FindControl<TextBlock>("txtLandingRollLabel");
+            _mainTabControl = this.FindControl<TabControl>("mainTabControl");
+            _expander = this.FindControl<Expander>("expander");
+            _TabItem_ATC = this.FindControl<TabItem>("TabItem_ATC");
+            _landingDetails = this.FindControl<LandingStats>("landingDetails");
+            _FMSControl = this.FindControl<FMS>("FMSControl");
+            _AttitudeIndicator = this.FindControl<AttitudeIndicator>("AttitudeIndicator");
+            _AircraftStateControl = this.FindControl<AircraftStatus>("AircraftStateControl");
+            _FpdControl = this.FindControl<FlightPlanDb>("FpdControl");
+        }
+
+        private void tabChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (_TabItem_ATC != null && _TabItem_ATC.IsSelected) Commands.atcMenu();
+        }
+
+        private void enableATCMessagesButton_Click(object sender, RoutedEventArgs e)
+        {
+            Client.ExecuteCommand("Live.EnableATCMessageNotification");
+        }
+        
+        private void atcMessagesDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var command = string.Format("Commands.ATCEntry{0}", _atcMessagesDataGrid.SelectedIndex + 1);
+
+            Client.ExecuteCommand(command);
+        }
+
+        #region "FlightPlanDatabase"
+
+        /*
+            FPD work
+            ===========================
+        */
+
+        private void FlightPlanDb_FplUpdated(object sender, EventArgs e)
+        {
+            _FMSControl.FPLState = new IF_FMS.FMS.flightPlanState(); //Clear state of FMS
+            _FMSControl.CustomFPL.waypoints.Clear(); //Clear FPL
+
+            foreach (IF_FMS.FMS.fplDetails f in _FpdControl.FmsFpl)
+                //Load waypoints to FMS
+                _FMSControl.CustomFPL.waypoints.Add(f);
+            _FMSControl.FPLState.fpl = _FpdControl.ApiFpl;
+            _FMSControl.FPLState.fplDetails = _FMSControl.CustomFPL;
+
+            //Go to FMS tab so user can see flight plan
+            _mainTabControl.SelectedIndex = _mainTabControl.SelectedIndex - 1;
+        }
+
+        #endregion
+
+        private void expander_Clicked(object sender, KeyEventArgs e)
+        {
+            if (_expanderExpanded)
+            {
+                Width = 525;
+                _expander.Header = "Expand";
+                _expanderExpanded = false;
+            }
+            else
+            {
+                Width = 1125;
+                _expander.Header = "Collapse";
+                _expanderExpanded = true;
+            }
+        }
+        
+        private void expander_Pressed(object sender, PointerPressedEventArgs e)
+        {
+            if (_expanderExpanded)
+            {
+                Width = 525;
+                _expander.Header = "Expand";
+                _expanderExpanded = false;
+            }
+            else
+            {
+                Width = 1125;
+                _expander.Header = "Collapse";
+                _expanderExpanded = true;
+            }
         }
 
         #region PageLoaded
+
         /*
             Start listeners on page load
             ===========================
         */
 
-        protected override void OnSourceInitialized(EventArgs e)
+        private void OnSourceInitialized(object? sender, EventArgs eventArgs)
         {
-            base.OnSourceInitialized(e);
-
             // Adds the windows message processing hook and registers USB device add/removal notification.
-           HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            /* HwndSource source = HwndSource.FromHwnd(new WindowInteropHelper(this).Handle);
+            ((TopLevel) this.GetVisualRoot()).PlatformImpl.
             if (source != null)
             {
                 var windowHandle = source.Handle;
                 source.AddHook(HwndHandler);
                 UsbNotification.RegisterUsbDeviceNotification(windowHandle);
-            }
+            } */
         }
 
         /// <summary>
-        /// Method that receives window messages.
+        ///     Method that receives window messages.
         /// </summary>
         private IntPtr HwndHandler(IntPtr hwnd, int msg, IntPtr wparam, IntPtr lparam, ref bool handled)
         {
             if (msg == UsbNotification.WmDevicechange)
-            {
-                switch ((int)wparam)
+                switch ((int) wparam)
                 {
                     case UsbNotification.DbtDeviceremovecomplete:
 
                         Console.WriteLine("USB device removed");
-                        joystickClient.deviceRemoved();
+                        _joystickClient.deviceRemoved();
 
                         break;
                     case UsbNotification.DbtDevicearrival:
 
                         Console.WriteLine("USB device connected, poll for joysticks again...");
-                        joystickClient.beginJoystickPoll();
+                        _joystickClient.beginJoystickPoll();
 
                         break;
                 }
-            }
 
             handled = false;
             return IntPtr.Zero;
         }
 
 
-        private void PageLoaded(object sender, RoutedEventArgs e)
+        private void PageLoaded(object? sender, EventArgs eventArgs)
         {
             // check for an update to app first
             Versioning.checkForUpdate();
 
-            receiver.DataReceived += receiver_DataReceived;
-            receiver.StartListening();
+            _receiver.DataReceived += receiver_DataReceived;
+            _receiver.StartListening();
 
             // Start JoystickHelper async
-            Task.Run(() =>
-            {
-                joystickClient.beginJoystickPoll();
-            });
-
+            //Task.Run(() => { _joystickClient.beginJoystickPoll(); });
         }
 
         #endregion
 
         #region Networking
+
         /*
             Connections to API, reading in values, etc.
             ===========================
         */
 
 
-        void receiver_DataReceived(object sender, EventArgs e)
+        private void receiver_DataReceived(object sender, EventArgs e)
         {
-            byte[] data = (byte[])sender;
+            var data = (byte[]) sender;
 
-            var apiServerInfo = Serializer.DeserializeJson<APIServerInfoLegacy>(UTF8Encoding.UTF8.GetString(data));
+            var apiServerInfo = JsonSerializer.Deserialize<APIServerInfoLegacy>(Encoding.UTF8.GetString(data));
 
             if (apiServerInfo != null)
             {
                 Console.WriteLine("Received Server Info from: {0}:{1}", apiServerInfo.Address, apiServerInfo.Port);
-                receiver.Stop();
+                _receiver.Stop();
                 if (apiServerInfo.Address != null)
-                {
-                    Dispatcher.BeginInvoke((Action)(() =>
+                    Dispatcher.UIThread.InvokeAsync(() =>
                     {
                         // Legacy version
-                        MessageBox.Show("The version of Infinite Flight you are trying to connect to is no longer supported. Please update Infinite Flight in the App Store or the Google Play Store to the latest version.", "There was a problem");
-                        Application.Current.Shutdown();
-                    }));
-                }
+
+                        MessageBoxManager
+                            .GetMessageBoxStandardWindow("There was a problem",
+                                "The version of Infinite Flight you are trying to connect to is no longer supported. Please update Infinite Flight in the App Store or the Google Play Store to the latest version.",
+                                ButtonEnum.Ok, MessageBox.Avalonia.Enums.Icon.Warning)
+                            .Show();
+                        Close();
+                    });
                 else
-                {
                     // Use new method
                     DataReceivedNewMethod(data);
-                }
             }
             else
             {
@@ -189,26 +290,25 @@ namespace LiveFlight
         private void DataReceivedNewMethod(byte[] data)
         {
             Console.WriteLine("Attempting to connect with new method...");
-            var apiServerInfo = Serializer.DeserializeJson<APIServerInfo>(UTF8Encoding.UTF8.GetString(data));
+            var apiServerInfo = JsonSerializer.Deserialize<Fds.IFAPI.APIServerInfo>(Encoding.UTF8.GetString(data));
 
             if (apiServerInfo != null)
             {
-                Console.WriteLine("Received Server Info from: {0}:{1}", apiServerInfo.Addresses.ToString(), apiServerInfo.Port);
-                receiver.Stop();
-                Dispatcher.BeginInvoke((Action)(() =>
+                Console.WriteLine("Received Server Info from: {0}:{1}", apiServerInfo.Addresses.ToString(),
+                    apiServerInfo.Port);
+                _receiver.Stop();
+                Dispatcher.UIThread.InvokeAsync(() =>
                 {
                     var ipToConnectTo = apiServerInfo.Addresses[0];
                     for (var i = 0; i < apiServerInfo.Addresses.Length; i++)
                     {
                         // Prefer IPv4 if available
-                        Match match = Regex.Match(apiServerInfo.Addresses[i], @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b");
-                        if (match.Success)
-                        {
-                            ipToConnectTo = match.Value;
-                        }
+                        var match = Regex.Match(apiServerInfo.Addresses[i], @"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b");
+                        if (match.Success) ipToConnectTo = match.Value;
                     }
-                    Connect(IPAddress.Parse(ipToConnectTo), apiServerInfo.Port);
-                }));
+
+                    Connect(IPAddress.Parse((string) ipToConnectTo), apiServerInfo.Port);
+                });
             }
             else
             {
@@ -218,299 +318,250 @@ namespace LiveFlight
 
         private void Connect(IPAddress iPAddress, int port)
         {
-            client.Connect(iPAddress.ToString(), port);
-            FMSControl.Client = client;
+            Client.Connect(iPAddress.ToString(), port);
+            _FMSControl.Client = Client;
 
             // set connected bool
-            connectionStatus = true;
+            _connectionStatus = true;
 
             // set label text
-            ipLabel.Content = String.Format("Infinite Flight is at {0}", iPAddress.ToString());
+            _ipLabel.Text = string.Format("Infinite Flight is at {0}", iPAddress);
 
-            overlayGrid.Visibility = System.Windows.Visibility.Collapsed;
-            mainTabControl.Visibility = System.Windows.Visibility.Visible;
+            _overlayGrid.IsVisible = false;
+            _mainTabControl.IsVisible = true;
 
-            client.CommandReceived += client_CommandReceived;
-            client.Disconnected += client_Disconnected;
+            Client.CommandReceived += client_CommandReceived;
+            Client.Disconnected += client_Disconnected;
 
-            client.SendCommand(new APICall { Command = "InfiniteFlight.GetStatus" });
-            client.SendCommand(new APICall { Command = "Live.EnableATCMessageListUpdated" });
+            Client.SendCommand(new APICall {Command = "InfiniteFlight.GetStatus"});
+            Client.SendCommand(new APICall {Command = "Live.EnableATCMessageListUpdated"});
 
             Task.Run(() =>
             {
-
-                while (connectionStatus == true)
-                {
+                while (_connectionStatus)
                     try
                     {
-                        client.SendCommand(new APICall { Command = "Airplane.GetState" });
+                        Client.SendCommand(new APICall {Command = "Airplane.GetState"});
                         Thread.Sleep(200);
-
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine("Exception whilst getting aircraft state: {0}", ex);
                     }
-                }
             });
 
             Task.Run(() =>
             {
-
-                while (connectionStatus == true)
-                {
+                while (_connectionStatus)
                     try
                     {
-                        client.SendCommand(new APICall { Command = "Live.GetTraffic" });
-                        client.SendCommand(new APICall { Command = "Live.ATCFacilities" });
+                        Client.SendCommand(new APICall {Command = "Live.GetTraffic"});
+                        Client.SendCommand(new APICall {Command = "Live.ATCFacilities"});
 
                         Thread.Sleep(5000);
-
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine("Exception whilst getting Live state: {0}", ex);
                     }
-                }
             });
         }
 
-        private void client_Disconnected(object sender, CommandReceivedEventArgs e)
+        private void client_Disconnected(object? sender, IFConnect.CommandReceivedEventArgs commandReceivedEventArgs)
         {
-            Dispatcher.Invoke(DispatcherPriority.Normal, (Action)delegate () { connectionLost(); });
+            Dispatcher.UIThread.InvokeAsync(delegate { connectionLost(); });
         }
 
         private void connectionLost()
         {
-            if (connectionStatus)
+            if (_connectionStatus)
             {
-                connectionStatus = false;
-                overlayGrid.Visibility = System.Windows.Visibility.Visible;
-                mainTabControl.Visibility = System.Windows.Visibility.Collapsed;
-                client = new IFConnectorClient();
-                receiver.Stop();
-                receiver.StartListening();
+                _connectionStatus = false;
+                _overlayGrid.IsVisible = true;
+                _mainTabControl.IsVisible = false;
+                Client = new IFConnect.IFConnectorClient();
+                _receiver.Stop();
+                _receiver.StartListening();
             }
         }
 
-        void client_CommandReceived(object sender, CommandReceivedEventArgs e)
+        private void client_CommandReceived(object sender, IFConnect.CommandReceivedEventArgs e)
         {
-            Dispatcher.BeginInvoke((Action)(() => 
+            Dispatcher.UIThread.InvokeAsync(() =>
             {
-                try {
-                   // System.Diagnostics.Debug.WriteLine(e.CommandString);
+                try
+                {
+                    // System.Diagnostics.Debug.WriteLine(e.CommandString);
                     var type = typeof(IFAPIStatus).Assembly.GetType(e.Response.Type);
 
                     if (type == typeof(APIAircraftState))
                     {
-                        var state = Serializer.DeserializeJson<APIAircraftState>(e.CommandString);
+                        var state = JsonSerializer.Deserialize<APIAircraftState>(e.CommandString);
 
                         // convert to fpm
-                        state.VerticalSpeed = float.Parse(Convert.ToString(state.VerticalSpeed * 200, CultureInfo.InvariantCulture.NumberFormat), CultureInfo.InvariantCulture.NumberFormat); // multiply by 200, this somehow gets it accurate..
+                        state.VerticalSpeed =
+                            float.Parse(
+                                Convert.ToString(state.VerticalSpeed * 200, CultureInfo.InvariantCulture.NumberFormat),
+                                CultureInfo.InvariantCulture
+                                    .NumberFormat); // multiply by 200, this somehow gets it accurate..
 
-                        airplaneStateGrid.DataContext = null;
-                        airplaneStateGrid.DataContext = state;
-                        pAircraftState = state;
-                        if (FMSControl.autoFplDirectActive) { FMSControl.updateAutoNav(state); }
-                        if (FMSControl.HoldingActive) { FMSControl.performHold(state); }
-                        AircraftStateControl.AircraftState = state;
-                        AttitudeIndicator.updateAttitude(state.Pitch, state.Bank);
-                       updateLandingRoll(state); 
+                        _airplaneStateGrid.DataContext = null;
+                        _airplaneStateGrid.DataContext = state;
+                        _pAircraftState = state;
+                        if (_FMSControl.autoFplDirectActive) _FMSControl.updateAutoNav(state);
+                        if (_FMSControl.HoldingActive) _FMSControl.performHold(state);
+                        _AircraftStateControl.AircraftState = state;
+                        _AttitudeIndicator.updateAttitude(state.Pitch, state.Bank);
+                        updateLandingRoll(state);
                     }
                     else if (type == typeof(GetValueResponse))
                     {
-                        var state = Serializer.DeserializeJson<GetValueResponse>(e.CommandString);
+                        var state = JsonSerializer.Deserialize<GetValueResponse>(e.CommandString);
 
                         Console.WriteLine("{0} -> {1}", state.Parameters[0].Name, state.Parameters[0].Value);
                     }
-                    else if (type == typeof(LiveAirplaneList))
-                    {
-                        LiveAirplaneList airplaneList = Serializer.DeserializeJson<LiveAirplaneList>(e.CommandString);
-                        //airplaneDataGrid.ItemsSource = airplaneList.Airplanes;
-                    }
-                    else if (type == typeof(FacilityList))
-                    {
-                        var facilityList = Serializer.DeserializeJson<FacilityList>(e.CommandString);
-
-                        //facilitiesDataGrid.ItemsSource = facilityList.Facilities;
-                    }
-                    else if (type == typeof(IFAPIStatus))
-                    {
-                        var status = Serializer.DeserializeJson<IFAPIStatus>(e.CommandString);
-
-                    }
                     else if (type == typeof(APIATCMessage))
                     {
-                        var msg = Serializer.DeserializeJson<APIATCMessage>(e.CommandString);
+                        var msg = JsonSerializer.Deserialize<APIATCMessage>(e.CommandString);
 
                         //Handle the ATC message to control the autopilot if enabled by checkbox
-                        FMSControl.handleAtcMessage(msg, pAircraftState);
+                        _FMSControl.handleAtcMessage(msg, _pAircraftState);
 
                         // TODO client.ExecuteCommand("Live.GetCurrentCOMFrequencies");
                     }
-                    else if (type == typeof(APIFrequencyInfoList))
-                    {
-                        var msg = Serializer.DeserializeJson<APIFrequencyInfoList>(e.CommandString);
-                    }
                     else if (type == typeof(ATCMessageList))
                     {
-                        var msg = Serializer.DeserializeJson<ATCMessageList>(e.CommandString);
-                        atcMessagesDataGrid.ItemsSource = msg.ATCMessages;
-
+                        var msg = JsonSerializer.Deserialize<ATCMessageList>(e.CommandString);
+                        _atcMessagesDataGrid.Items = msg.ATCMessages;
                     }
                     else if (type == typeof(APIFlightPlan))
                     {
-                        var msg = Serializer.DeserializeJson<APIFlightPlan>(e.CommandString);
+                        var msg = JsonSerializer.Deserialize<APIFlightPlan>(e.CommandString);
                         Console.WriteLine("Flight Plan: {0} items", msg.Waypoints.Length);
-                        FMSControl.fplReceived(msg); //Update FMS with FPL from IF.
+                        _FMSControl.FplReceived(msg); //Update FMS with FPL from IF.
                         foreach (var item in msg.Waypoints)
-                        {
-                            Console.WriteLine(" -> {0} {1} - {2}, {3}", item.Name, item.Code, item.Latitude, item.Longitude);
-                        }
+                            Console.WriteLine(" -> {0} {1} - {2}, {3}", item.Name, item.Code, item.Latitude,
+                                item.Longitude);
                     }
                     else if (type == typeof(APIAutopilotState))
                     {
-                        FMSControl.APState = Serializer.DeserializeJson<APIAutopilotState>(e.CommandString);
+                        _FMSControl.APState = Serializer.DeserializeJson<APIAutopilotState>(e.CommandString);
                     }
-                } catch (System.NullReferenceException) {
+                }
+                catch (NullReferenceException)
+                {
                     Console.WriteLine("Disconnected from server!");
                     //Let the client handle the lost connection.
                     //connectionStatus = false;
-                }       
-            }));            
+                }
+            });
         }
 
-        private APIAircraftState pLastState, pStateJustBeforeTouchdown, pStateJustAfterTouchdown;
-        private Coordinate pLandingLocation;
-        private double pLastLandingRoll = 0.0;
-        private LandingStats pLandingStatDlg;
         private void updateLandingRoll(APIAircraftState state)
         {
-            if (pLastState == null)
+            if (_pLastState == null)
             {
-                pLastState = state;
-            }else if (!state.IsOnGround)
+                _pLastState = state;
+            }
+            else if (!state.IsOnGround)
             {
-                pLastState = state;
-                pLastLandingRoll = 0.0;
-                pLandingLocation = null;
-                txtLandingRoll.Visibility = Visibility.Hidden;
-                txtLandingRollLabel.Visibility = Visibility.Hidden;
+                _pLastState = state;
+                _pLastLandingRoll = 0.0;
+                _pLandingLocation = null;
+                _txtLandingRoll.IsVisible = false;
+                _txtLandingRollLabel.IsVisible = false;
                 //btnViewLandingStats.Visibility = Visibility.Hidden;
             }
-            else if (!pLastState.IsLanded && state.IsLanded) //Just transitioned to "landed" state, so start the roll accumulation
+            else if (!_pLastState.IsLanded && state.IsLanded
+            ) //Just transitioned to "landed" state, so start the roll accumulation
             {
-                pLandingLocation = state.Location;
-                pStateJustBeforeTouchdown = pLastState;
-                pStateJustAfterTouchdown = state;
-                pLastState = state;
+                _pLandingLocation = state.Location;
+                _pStateJustBeforeTouchdown = _pLastState;
+                _pStateJustAfterTouchdown = state;
+                _pLastState = state;
             }
-            else if (state.IsLanded && pLandingLocation != null) //We are in landed state. Calc the roll length.
+            else if (state.IsLanded && _pLandingLocation != null) //We are in landed state. Calc the roll length.
             {
-                Coordinate currentPosition = state.Location;
+                var currentPosition = state.Location;
                 var R = 3959; // Radius of the earth in miles
-                var dLat = (currentPosition.Latitude - pLandingLocation.Latitude) * (Math.PI / 180);
-                var dLon = (currentPosition.Longitude - pLandingLocation.Longitude) * (Math.PI / 180);
+                var dLat = (currentPosition.Latitude - _pLandingLocation.Latitude) * (Math.PI / 180);
+                var dLon = (currentPosition.Longitude - _pLandingLocation.Longitude) * (Math.PI / 180);
                 var a =
-                  Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                  Math.Cos((currentPosition.Latitude) * (Math.PI / 180)) * Math.Cos((pLandingLocation.Latitude) * (Math.PI / 180)) *
-                  Math.Sin(dLon / 2) * Math.Sin(dLon / 2)
-                  ;
+                        Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                        Math.Cos(currentPosition.Latitude * (Math.PI / 180)) *
+                        Math.Cos(_pLandingLocation.Latitude * (Math.PI / 180)) *
+                        Math.Sin(dLon / 2) * Math.Sin(dLon / 2)
+                    ;
                 var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
                 var d = R * c; // Distance in miles
                 d *= 5280; //Distance in ft
-                txtLandingRoll.Text = String.Format("{0:0.00}", d) + " ft";
-                txtLandingRoll.Visibility = Visibility.Visible;
-                txtLandingRollLabel.Visibility = Visibility.Visible;
-                pLastState = state;
-                landingDetails.updateLandingStats(pLandingLocation, pAircraftState.Location, pStateJustBeforeTouchdown, pStateJustAfterTouchdown, "");
+                _txtLandingRoll.Text = string.Format("{0:0.00}", d) + " ft";
+                _txtLandingRoll.IsVisible = true;
+                _txtLandingRollLabel.IsVisible = true;
+                _pLastState = state;
+                _landingDetails.updateLandingStats(_pLandingLocation, _pAircraftState.Location,
+                    _pStateJustBeforeTouchdown, _pStateJustAfterTouchdown, "");
             }
 
-            if(pLandingLocation !=null && state.IsLanded && state.IsOnGround && state.GroundSpeedKts < 10)
+            if (_pLandingLocation != null && state.IsLanded && state.IsOnGround && state.GroundSpeedKts < 10)
             {
-                pLandingStatDlg = new LandingStats();
-                pLandingStatDlg.updateLandingStats(pLandingLocation, pAircraftState.Location, pStateJustBeforeTouchdown, pStateJustAfterTouchdown, "");
-                landingDetails.updateLandingStats(pLandingLocation, pAircraftState.Location, pStateJustBeforeTouchdown, pStateJustAfterTouchdown, "");
+                _pLandingStatDlg = new LandingStats();
+                _pLandingStatDlg.updateLandingStats(_pLandingLocation, _pAircraftState.Location,
+                    _pStateJustBeforeTouchdown, _pStateJustAfterTouchdown, "");
+                _landingDetails.updateLandingStats(_pLandingLocation, _pAircraftState.Location,
+                    _pStateJustBeforeTouchdown, _pStateJustAfterTouchdown, "");
                 //btnViewLandingStats.Visibility = Visibility.Visible;
             }
-
         }
 
         private void btnViewLandingStats_Click(object sender, RoutedEventArgs e)
         {
-            Window window = new Window
+            var window = new Window
             {
                 Title = "Last Landing Stats",
-                Content = pLandingStatDlg,
+                Content = _pLandingStatDlg,
                 SizeToContent = SizeToContent.WidthAndHeight,
-                ResizeMode=ResizeMode.NoResize
+                CanResize = false
             };
 
-            window.ShowDialog();
-
+            window.ShowDialog(this);
         }
 
         #endregion
 
-        private void tabChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (TabItem_ATC.IsSelected)
-            {
-                commands.atcMenu();
-            }
-
-        }
-
-        private void enableATCMessagesButton_Click(object sender, RoutedEventArgs e)
-        {
-            client.ExecuteCommand("Live.EnableATCMessageNotification");
-        }
-
-
-        private void atcMessagesDataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var command = string.Format("Commands.ATCEntry{0}", atcMessagesDataGrid.SelectedIndex + 1);
-
-            client.ExecuteCommand(command);            
-        }
-
-
 
         #region Keyboard commands
+
         /*
             Keyboard Commands
             ===========================
         */
 
-        private void keyDownEvent(object sender, System.Windows.Input.KeyEventArgs e)
+        private void keyDownEvent(object? sender, KeyEventArgs keyEventArgs)
         {
             // check if a field is focused
             if (KeyboardCommandHandler.keyboardCommandsDisabled != FlightPlanDatabase.FlightPlanDb.textFieldFocused)
-            {
                 KeyboardCommandHandler.keyboardCommandsDisabled = FlightPlanDatabase.FlightPlanDb.textFieldFocused;
-            }
 
             if (KeyboardCommandHandler.keyboardCommandsDisabled != IF_FMS.FMS.textFieldFocused)
-            {
                 KeyboardCommandHandler.keyboardCommandsDisabled = IF_FMS.FMS.textFieldFocused;
-            }
 
-            Console.WriteLine("Key pressed: {0}", e.Key);
+            Console.WriteLine("Key pressed: {0}", keyEventArgs.Key);
 
-            KeyboardCommandHandler.keyPressed(e.Key);
-
+            KeyboardCommandHandler.keyPressed(keyEventArgs.Key);
         }
 
-        private void keyUpEvent(object sender, System.Windows.Input.KeyEventArgs e)
+        private void keyUpEvent(object? sender, KeyEventArgs keyEventArgs)
         {
-            Console.WriteLine("KeyUp: {0}", e.Key);
+            Console.WriteLine("KeyUp: {0}", keyEventArgs.Key);
 
-            KeyboardCommandHandler.keyUp(e.Key);
+            KeyboardCommandHandler.keyUp(keyEventArgs.Key);
         }
 
         #endregion
 
         #region Menu items
+
         /*
             Menu Items
             ===========================
@@ -520,209 +571,165 @@ namespace LiveFlight
 
         private void nextCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.nextCamera();
+            Commands.nextCamera();
         }
 
         private void previousCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.previousCamera();
+            Commands.previousCamera();
         }
 
         private void cockpitCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.cockpitCamera();
+            Commands.cockpitCamera();
         }
 
         private void virtualCockpitCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.vcCamera();
+            Commands.vcCamera();
         }
 
         private void followCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.followCamera();
+            Commands.followCamera();
         }
 
         private void onBoardCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.onboardCamera();
+            Commands.onboardCamera();
         }
 
         private void fybyCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.flybyCamera();
+            Commands.flybyCamera();
         }
 
         private void towerCameraMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.towerCamera();
+            Commands.towerCamera();
         }
 
-            //  Controls menu
+        //  Controls menu
 
         private void landingGearMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.landingGear();
+            Commands.landingGear();
         }
 
         private void spoilersMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.spoilers();
+            Commands.spoilers();
         }
 
         private void flapsUpMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.flapsUp();
+            Commands.flapsUp();
         }
 
         private void flapsDownMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.flapsDown();
+            Commands.flapsDown();
         }
 
         private void parkingBrakesMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.parkingBrake();
+            Commands.parkingBrake();
         }
 
         private void autopilotMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.autopilot();
+            Commands.autopilot();
         }
 
         private void pushbackMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.pushback();
+            Commands.pushback();
         }
 
         private void pauseMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.pause();
+            Commands.pause();
         }
 
-            //  Lights menu
+        //  Lights menu
 
         private void landingLightsMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.landing();
+            Commands.landing();
         }
 
         private void strobeLightsMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.strobe();
+            Commands.strobe();
         }
 
         private void navLightsMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.nav();
+            Commands.nav();
         }
 
         private void beaconLightsMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.beacon();
+            Commands.beacon();
         }
 
-            //  Live menu
+        //  Live menu
 
         private void atcWindowMenu_Click(object sender, RoutedEventArgs e)
         {
-            commands.atcMenu();
+            Commands.atcMenu();
         }
 
-             //  Help menu
+        //  Help menu
 
         private void joystickSetupGuide(object sender, RoutedEventArgs e)
         {
-
             // go to liveflight help site
             var URL = "http://help.liveflightapp.com";
-            System.Diagnostics.Process.Start(URL);
-
+            Process.Start(URL);
         }
 
         private void sourceCodeMenu_Click(object sender, RoutedEventArgs e)
         {
-
             // go to GitHub
             var URL = "https://github.com/LiveFlightApp/Connect-Windows";
-            System.Diagnostics.Process.Start(URL);
-
+            Process.Start(URL);
         }
 
         private void communityMenu_Click(object sender, RoutedEventArgs e)
         {
             // go to Community
             var URL = "http://community.infinite-flight.com/?u=carmalonso";
-            System.Diagnostics.Process.Start(URL);
+            Process.Start(URL);
         }
 
         private void liveFlightMenu_Click(object sender, RoutedEventArgs e)
         {
             // go to LiveFlight
             var URL = "http://www.liveflightapp.com";
-            System.Diagnostics.Process.Start(URL);
+            Process.Start(URL);
         }
 
         private void lfFacebookMenu_Click(object sender, RoutedEventArgs e)
         {
             // go to LiveFlight Facebook
             var URL = "http://facebook.com/LiveFlightApp/";
-            System.Diagnostics.Process.Start(URL);
+            Process.Start(URL);
         }
 
         private void lfTwitterMenu_Click(object sender, RoutedEventArgs e)
         {
             // go to LiveFlight Twitter
             var URL = "http://twitter.com/LiveFlightApp/";
-            System.Diagnostics.Process.Start(URL);
+            Process.Start(URL);
         }
 
         private void aboutLfMenu_Click(object sender, RoutedEventArgs e)
         {
-            AboutWindow about = new AboutWindow();
+            var about = new AboutWindow();
             about.Show();
         }
 
         #endregion
-
-        #region "FlightPlanDatabase"
-        /*
-            FPD work
-            ===========================
-        */
-
-        private void FlightPlanDb_FplUpdated(object sender, EventArgs e)
-        {
-            FMSControl.FPLState = new IF_FMS.FMS.flightPlanState(); //Clear state of FMS
-            FMSControl.CustomFPL.waypoints.Clear(); //Clear FPL
-
-            foreach (IF_FMS.FMS.fplDetails f in FpdControl.FmsFpl)
-            { //Load waypoints to FMS
-                FMSControl.CustomFPL.waypoints.Add(f);
-            }
-            FMSControl.FPLState.fpl = FpdControl.ApiFpl;
-            FMSControl.FPLState.fplDetails = FMSControl.CustomFPL;
-
-            //Go to FMS tab so user can see flight plan
-            mainTabControl.SelectedIndex = mainTabControl.SelectedIndex - 1;
-        }
-
-
-
-
-
-        #endregion
-
-        private void expander_Expanded(object sender, RoutedEventArgs e)
-        {
-            this.Width = 1125;
-            expander.Header = "Collapse";
-        }
-
-        private void expander_Collapsed(object sender, RoutedEventArgs e)
-        {
-            this.Width = 525;
-            expander.Header = "Expand";
-        }
     }
 }

@@ -1,19 +1,16 @@
 ﻿<UserControl x:Class="IF_FMS.FMS"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:IF_FMS"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <UserControl.Resources>
-        <CollectionViewSource  x:Key="ItemCollectionViewSource" CollectionViewType="ListCollectionView"></CollectionViewSource>
-    </UserControl.Resources>
     <Grid Margin="0,0,-682,-116">
         <!-- CellEditEnding="dgFplEdited"-->
 
         <!-- CellEditEnding="dgFplEdited"-->
-        <DataGrid x:Name="dgFpl" HorizontalAlignment="Left" Margin="7,242,0,0" VerticalAlignment="Top" Height="153" Width="287" CanUserResizeColumns="False" CanUserResizeRows="False" CanUserSortColumns="False" ItemsSource="{Binding CustomFplWaypoints, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:FMS}}, UpdateSourceTrigger=PropertyChanged}" BeginningEdit="dgFpl_BeginningEdit" CellEditEnding="dgFpl_CellEditEnding"
+        <DataGrid Name="dgFpl" HorizontalAlignment="Left" Margin="7,242,0,0" VerticalAlignment="Top" Height="153" Width="287" CanUserResizeColumns="False" CanUserSortColumns="False" Items="{Binding CustomFplWaypoints, RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type local:FMS}}}" BeginningEdit="dgFpl_BeginningEdit" CellEditEnding="dgFpl_CellEditEnding"
                  >
             <!--<DataGrid.Columns>
                 <DataGridTextColumn Header="WPT" Binding="{Binding CustomFplWaypoints.WaypointName}" IsReadOnly="False"/>
@@ -21,53 +18,53 @@
                 <DataGridTextColumn Header="SPD" Binding="{Binding CustomFplWaypoints.Airspeed}" IsReadOnly="False"/>
             </DataGrid.Columns>-->
         </DataGrid>
-        <Button x:Name="btnGetFpl" Content="Retrieve FPL" HorizontalAlignment="Left" Height="26" Margin="7,211,0,0" VerticalAlignment="Top" Width="97" Click="btnGetFpl_Click"/>
-        <Button x:Name="btnInitFlightDir" Content="Enable AutoNAV" HorizontalAlignment="Left" Margin="24,45,0,0" VerticalAlignment="Top" Width="136" Height="57" Click="btnInitFlightDir_Click" FontWeight="Bold" FontSize="16" />
-        <!--<Button x:Name="btnDisFlightDir" Content="Disable AutoNAV" HorizontalAlignment="Left" Margin="24,84,0,0" VerticalAlignment="Top" Width="136" Height="27" Click="btnDisFlightDir_Click"/> -->
-        <Label x:Name="label" Content="Next" HorizontalAlignment="Left" Margin="243,6,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.286,0.385"/>
-        <Label x:Name="label_Copy" Content="Dist To Next" HorizontalAlignment="Left" Margin="203,29,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label_Copy1" Content="Hdg To Next" HorizontalAlignment="Left" Margin="201,55,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblNextWpt" Content="---" HorizontalAlignment="Left" Margin="278,6,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.286,0.385"/>
-        <Label x:Name="lblDist2Next" Content="---" HorizontalAlignment="Left" Margin="278,29,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblHdg2Next" Content="---" HorizontalAlignment="Left" Margin="278,55,0,0" VerticalAlignment="Top"/>
-        <Button x:Name="btnSetFpl" Content="Set FPL" HorizontalAlignment="Left" Height="26" Margin="109,211,0,0" VerticalAlignment="Top" Width="87" Click="btnSetFpl_Click"/>
-        <Button x:Name="btnClrFpl" Content="Clear FPL" HorizontalAlignment="Left" Height="25" Margin="201,212,0,0" VerticalAlignment="Top" Width="93" Click="btnClrFpl_Click"/>
-        <Label x:Name="label1" Content="If FPL is modified in IF, press 'Retrieve FPL' to sync with IF. &#xA;If FPL is modified here, press 'Set FPL' to push change to IF." HorizontalAlignment="Left" Margin="7,162,0,0" VerticalAlignment="Top" Height="44" Width="357" BorderThickness="1" VerticalContentAlignment="Center" UseLayoutRounding="False" BorderBrush="Black"/>
-        <Label x:Name="label_Copy2" Content="Airspeed Set" HorizontalAlignment="Left" Margin="203,81,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="label_Copy3" Content="Altitude Set" HorizontalAlignment="Left" Margin="208,107,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblAirspeedSet" Content="---" HorizontalAlignment="Left" Margin="278,81,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblAltitudeSet" Content="---" HorizontalAlignment="Left" Margin="278,107,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblFmsState" Content="AutoNAV Disabled" HorizontalAlignment="Left" Margin="7,3,0,0" VerticalAlignment="Top" Width="186" FontSize="18.667" Foreground="Red" FontWeight="Bold"/>
-        <Label x:Name="label_Copy4" Content="VS Set" HorizontalAlignment="Left" Margin="208,131,0,0" VerticalAlignment="Top"/>
-        <Label x:Name="lblVsSet" Content="---" HorizontalAlignment="Left" Margin="278,131,0,0" VerticalAlignment="Top"/>
+        <Button Name="btnGetFpl" Content="Retrieve FPL" HorizontalAlignment="Left" Height="26" Margin="7,211,0,0" VerticalAlignment="Top" Width="97" Click="btnGetFpl_Click"/>
+        <Button Name="btnInitFlightDir" Content="Enable AutoNAV" HorizontalAlignment="Left" Margin="24,45,0,0" VerticalAlignment="Top" Width="136" Height="57" Click="btnInitFlightDir_Click" FontWeight="Bold" FontSize="16" />
+        <!--<Button Name="btnDisFlightDir" Text="Disable AutoNAV" HorizontalAlignment="Left" Margin="24,84,0,0" VerticalAlignment="Top" Width="136" Height="27" Click="btnDisFlightDir_Click"/> -->
+        <TextBlock Name="TextBlock" Text="Next" HorizontalAlignment="Left" Margin="243,6,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.286,0.385"/>
+        <TextBlock Name="TextBlock_Copy" Text="Dist To Next" HorizontalAlignment="Left" Margin="203,29,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="TextBlock_Copy1" Text="Hdg To Next" HorizontalAlignment="Left" Margin="201,55,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="lblNextWpt" Text="---" HorizontalAlignment="Left" Margin="278,6,0,0" VerticalAlignment="Top" RenderTransformOrigin="0.286,0.385"/>
+        <TextBlock Name="lblDist2Next" Text="---" HorizontalAlignment="Left" Margin="278,29,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="lblHdg2Next" Text="---" HorizontalAlignment="Left" Margin="278,55,0,0" VerticalAlignment="Top"/>
+        <Button Name="btnSetFpl" Content="Set FPL" HorizontalAlignment="Left" Height="26" Margin="109,211,0,0" VerticalAlignment="Top" Width="87" Click="btnSetFpl_Click"/>
+        <Button Name="btnClrFpl" Content="Clear FPL" HorizontalAlignment="Left" Height="25" Margin="201,212,0,0" VerticalAlignment="Top" Width="93" Click="btnClrFpl_Click"/>
+        <TextBlock Name="TextBlock1" Text="If FPL is modified in IF, press 'Retrieve FPL' to sync with IF. &#xA;If FPL is modified here, press 'Set FPL' to push change to IF." HorizontalAlignment="Left" Margin="7,162,0,0" VerticalAlignment="Top" Height="44" Width="357" TextAlignment="Center" UseLayoutRounding="False"/>
+        <TextBlock Name="TextBlock_Copy2" Text="Airspeed Set" HorizontalAlignment="Left" Margin="203,81,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="TextBlock_Copy3" Text="Altitude Set" HorizontalAlignment="Left" Margin="208,107,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="lblAirspeedSet" Text="---" HorizontalAlignment="Left" Margin="278,81,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="lblAltitudeSet" Text="---" HorizontalAlignment="Left" Margin="278,107,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="lblFmsState" Text="AutoNAV Disabled" HorizontalAlignment="Left" Margin="7,3,0,0" VerticalAlignment="Top" Width="186" FontSize="18.667" Foreground="Red" FontWeight="Bold"/>
+        <TextBlock Name="TextBlock_Copy4" Text="VS Set" HorizontalAlignment="Left" Margin="208,131,0,0" VerticalAlignment="Top"/>
+        <TextBlock Name="lblVsSet" Text="---" HorizontalAlignment="Left" Margin="278,131,0,0" VerticalAlignment="Top"/>
 
         <Border Margin="525,6,0,0" BorderBrush="Black" BorderThickness="1" CornerRadius="5" HorizontalAlignment="Left" Width="181" Height="180" VerticalAlignment="Top">
             <Grid>
-                <Button x:Name="btnHold" Content="HOLD" HorizontalAlignment="Left" Margin="10,130,0,0" VerticalAlignment="Top" Width="123" Click="btnHold_Click"/>
-                <Label x:Name="lblHoldInfo" Content="" HorizontalAlignment="Left" Margin="10,152,0,-2" VerticalAlignment="Top" Width="136" Height="28"/>
-                <Slider x:Name="slider" HorizontalAlignment="Left" Margin="91,100,0,0" VerticalAlignment="Top" Width="28" Maximum="1" SmallChange="1" ToolTip="Left or Right Turns" IsSnapToTickEnabled="True" Height="22" TickPlacement="BottomRight" Value="1" Foreground="{x:Null}"/>
-                <Label x:Name="lblHoldInfo_Copy1" Content="L" HorizontalAlignment="Left" Margin="93,116,0,0" VerticalAlignment="Top" Width="9" Height="14" Padding="0" FontSize="8"/>
-                <Label x:Name="lblHoldInfo_Copy2" Content="R" HorizontalAlignment="Left" Margin="111,116,0,0" VerticalAlignment="Top" Width="9" Height="14" Padding="0" FontSize="8"/>
-                <Label x:Name="lblHoldInfo_Copy" Content="Turn Direction" HorizontalAlignment="Left" Margin="6,99,0,0" VerticalAlignment="Top" Width="85" Height="23"/>
-                <Label x:Name="lblHoldInfo_Copy3" Content="Leg Length" HorizontalAlignment="Left" Margin="6,71,0,0" VerticalAlignment="Top" Width="70" Height="28"/>
-                <TextBox x:Name="txtLegLen" HorizontalAlignment="Left" Height="21" Margin="85,74,0,0" TextWrapping="Wrap" Text="5" VerticalAlignment="Top" Width="23"/>
-                <Label x:Name="lblHoldInfo_Copy4" Content="nm" HorizontalAlignment="Left" Margin="105,72,0,0" VerticalAlignment="Top" Width="28" Height="28"/>
-                <Label x:Name="lblHoldInfo_Copy5" Content="Set up hold parameters below.&#xA;Enter holding pattern. &#xA;When at correct heading, press &#xA;HOLD button when over Fix." HorizontalAlignment="Left" VerticalAlignment="Top" Width="181" Height="72"/>
+                <Button Name="btnHold" Content="HOLD" HorizontalAlignment="Left" Margin="10,130,0,0" VerticalAlignment="Top" Width="123" Click="btnHold_Click"/>
+                <TextBlock Name="lblHoldInfo" Text="" HorizontalAlignment="Left" Margin="10,152,0,-2" VerticalAlignment="Top" Width="136" Height="28"/>
+                <Slider Name="slider" HorizontalAlignment="Left" Margin="91,100,0,0" VerticalAlignment="Top" Width="28" Maximum="1" SmallChange="1" IsSnapToTickEnabled="True" Height="22" Value="1" Foreground="{x:Null}"/>
+                <TextBlock Name="lblHoldInfo_Copy1" Text="L" HorizontalAlignment="Left" Margin="93,116,0,0" VerticalAlignment="Top" Width="9" Height="14" FontSize="8"/>
+                <TextBlock Name="lblHoldInfo_Copy2" Text="R" HorizontalAlignment="Left" Margin="111,116,0,0" VerticalAlignment="Top" Width="9" Height="14" FontSize="8"/>
+                <TextBlock Name="lblHoldInfo_Copy" Text="Turn Direction" HorizontalAlignment="Left" Margin="6,99,0,0" VerticalAlignment="Top" Width="85" Height="23"/>
+                <TextBlock Name="lblHoldInfo_Copy3" Text="Leg Length" HorizontalAlignment="Left" Margin="6,71,0,0" VerticalAlignment="Top" Width="70" Height="28"/>
+                <TextBox Name="txtLegLen" HorizontalAlignment="Left" Height="21" Margin="85,74,0,0" TextWrapping="Wrap" Text="5" VerticalAlignment="Top" Width="23"/>
+                <TextBlock Name="lblHoldInfo_Copy4" Text="nm" HorizontalAlignment="Left" Margin="105,72,0,0" VerticalAlignment="Top" Width="28" Height="28"/>
+                <TextBlock Name="lblHoldInfo_Copy5" Text="Set up hold parameters below.&#xA;Enter holding pattern. &#xA;When at correct heading, press &#xA;HOLD button when over Fix." HorizontalAlignment="Left" VerticalAlignment="Top" Width="181" Height="72"/>
 
             </Grid>
         </Border>
         <Border Margin="525,191,0,0" BorderBrush="Black" BorderThickness="1" CornerRadius="5" HorizontalAlignment="Left" Width="181" Height="142" VerticalAlignment="Top">
             <Grid Margin="0,0,0,9">
-                <Label x:Name="lblCurrentCallsgn" Content="Enter Your Current Callsign:" HorizontalAlignment="Left" Margin="6,55,0,0" VerticalAlignment="Top" Width="163" Height="28"/>
-                <TextBox x:Name="txtCurrentCallsign" HorizontalAlignment="Left" Height="21" Margin="10,76,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="150"/>
-                <Label x:Name="lblHoldInfo_Copy6" Content="Enter callsign and enable to &#xD;&#xA;allow ATC commands to &#xD;&#xA;directly control autopilot." HorizontalAlignment="Left" VerticalAlignment="Top" Width="181" Height="72" Margin="0,0,-2,0"/>
-                <CheckBox x:Name="chkEnableAtcAutopilot" Content="Enable ATC Autopilot" HorizontalAlignment="Left" Margin="10,112,0,0" VerticalAlignment="Top" Height="16" Width="150" Checked="chkEnableAtcAutopilot_Checked"/>
+                <TextBlock Name="lblCurrentCallsgn" Text="Enter Your Current Callsign:" HorizontalAlignment="Left" Margin="6,55,0,0" VerticalAlignment="Top" Width="163" Height="28"/>
+                <TextBox Name="txtCurrentCallsign" HorizontalAlignment="Left" Height="21" Margin="10,76,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="150"/>
+                <TextBlock Name="lblHoldInfo_Copy6" Text="Enter callsign and enable to &#xD;&#xA;allow ATC commands to &#xD;&#xA;directly control autopilot." HorizontalAlignment="Left" VerticalAlignment="Top" Width="181" Height="72" Margin="0,0,-2,0"/>
+                <CheckBox Name="chkEnableAtcAutopilot" Content="Enable ATC Autopilot" HorizontalAlignment="Left" Margin="10,112,0,0" VerticalAlignment="Top" Height="16" Width="150" Checked="chkEnableAtcAutopilot_Checked"/>
 
             </Grid>
         </Border>
-        <TextBox x:Name="txtAtcLog" HorizontalAlignment="Left" Height="304" Margin="711,29,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="261" IsReadOnly="True" VerticalScrollBarVisibility="Auto"/>
-        <Label x:Name="label2" Content="ATC Log" HorizontalAlignment="Left" Margin="735,3,0,0" VerticalAlignment="Top" Width="110"/>
-        <Button x:Name="btnEnaAtcLog" Content="Enable ATC Log" HorizontalAlignment="Left" Margin="874,3,0,0" VerticalAlignment="Top" Width="98" Click="btnEnaAtcLog_Click"/>
-        <CheckBox x:Name="chkFilterCallsignOnly" Content="Show your messages only" HorizontalAlignment="Left" Margin="711,338,0,0" VerticalAlignment="Top" Width="193"/>
+        <TextBox Name="txtAtcLog" HorizontalAlignment="Left" Height="304" Margin="711,29,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="261" IsReadOnly="True"/>
+        <TextBlock Name="TextBlock2" Text="ATC Log" HorizontalAlignment="Left" Margin="735,3,0,0" VerticalAlignment="Top" Width="110"/>
+        <Button Name="btnEnaAtcLog" Content="Enable ATC Log" HorizontalAlignment="Left" Margin="874,3,0,0" VerticalAlignment="Top" Width="98" Click="btnEnaAtcLog_Click"/>
+        <CheckBox Name="chkFilterCallsignOnly" Content="Show your messages only" HorizontalAlignment="Left" Margin="711,338,0,0" VerticalAlignment="Top" Width="193"/>
     </Grid>
 </UserControl>

@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
 using Fds.IFAPI;
 using System.ComponentModel;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using Avalonia.Controls;
+using Avalonia.Interactivity;
+using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using MessageBox.Avalonia;
+using MessageBox.Avalonia.Enums;
 
 namespace IF_FMS
 {
@@ -23,14 +27,59 @@ namespace IF_FMS
             set { client = value; }
         }
 
-        
-
         private APIAircraftState pAircraftState = new APIAircraftState();
         public bool autoFplDirectActive = false;
+        
+        /* UI Elements */
+        private TextBlock _lblFmsState;
+        private Button _btnInitFlightDir;
+        private DataGrid _dgFpl;
+        private TextBlock _lblNextWpt;
+        private TextBlock _lblDist2Next;
+        private TextBlock _lblHdg2Next;
+        private TextBlock _lblAirspeedSet;
+        private TextBlock _lblAltitudeSet;
+        private TextBlock _lblVsSet;
+        private CheckBox _chkFilterCallsignOnly;
+        private TextBox _txtAtcLog;
+        private CheckBox _chkEnableAtcAutopilot;
+        private TextBox _txtCurrentCallsign;
+        private TextBlock _lblHoldInfo;
+        private Button _btnHold;
+        private Slider _slider;
+        private TextBox _txtLegLen;
 
         public FMS()
         {
             InitializeComponent();
+            InitializeUiElements();
+        }
+
+        private void InitializeUiElements()
+        {
+            _lblFmsState = this.FindControl<TextBlock>("lblFmsState");
+            _btnInitFlightDir = this.FindControl<Button>("btnInitFlightDir");
+            _btnInitFlightDir = this.FindControl<Button>("btnInitFlightDir");
+            _dgFpl = this.FindControl<DataGrid>("dgFpl");
+            _lblNextWpt = this.FindControl<TextBlock>("lblNextWpt");
+            _lblDist2Next = this.FindControl<TextBlock>("lblDist2Next");
+            _lblHdg2Next = this.FindControl<TextBlock>("lblHdg2Next");
+            _lblAirspeedSet = this.FindControl<TextBlock>("lblAirspeedSet");
+            _lblAltitudeSet = this.FindControl<TextBlock>("lblAltitudeSet");
+            _lblVsSet = this.FindControl<TextBlock>("lblVsSet");
+            _chkFilterCallsignOnly = this.FindControl<CheckBox>("chkFilterCallsignOnly");
+            _txtAtcLog = this.FindControl<TextBox>("txtAtcLog");
+            _chkEnableAtcAutopilot = this.FindControl<CheckBox>("chkEnableAtcAutopilot");
+            _txtCurrentCallsign = this.FindControl<TextBox>("txtCurrentCallsign");
+            _lblHoldInfo = this.FindControl<TextBlock>("lblHoldInfo");
+            _btnHold = this.FindControl<Button>("btnHold");
+            _slider = this.FindControl<Slider>("slider");
+            _txtLegLen = this.FindControl<TextBox>("txtLegLen");
+        }
+        
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
         }
 
         #region Flight Plan Classes
@@ -154,36 +203,40 @@ namespace IF_FMS
                 getAPState();
                 if (pFplState==null || pFplState.fpl == null)
                 {
-                    MessageBox.Show("Must get or set FPL first.");
+                    MessageBoxManager
+                        .GetMessageBoxStandardWindow("Info",
+                            "Must get or set FPL first.",
+                            ButtonEnum.Ok, Icon.Info)
+                        .Show();
                 }
                 else if (pFplState.fpl.Waypoints.Length > 0)
                 {
                     //updateAutoNav(pAircraftState);
                     autoFplDirectActive = true;
-                    lblFmsState.Content = "AutoNAV Enabled";
-                    lblFmsState.Foreground = System.Windows.Media.Brushes.DarkGreen;
-                    btnInitFlightDir.Content = "Disable AutoNAV";
+                    _lblFmsState.Text = "AutoNAV Enabled";
+                    _lblFmsState.Foreground = Brushes.DarkGreen;
+                    _btnInitFlightDir.Content = "Disable AutoNAV";
                 }
             }
             else //AutoNav running. Turn it off.
             {
                 autoFplDirectActive = false;
-                lblFmsState.Content = "AutoNAV Disabled";
-                lblFmsState.Foreground = System.Windows.Media.Brushes.Red;
-                btnInitFlightDir.Content = "Enable AutoNAV";
+                _lblFmsState.Text = "AutoNAV Disabled";
+                _lblFmsState.Foreground = Brushes.Red;
+                _btnInitFlightDir.Content = "Enable AutoNAV";
             }
         }
 
         private void btnDisFlightDir_Click(object sender, RoutedEventArgs e)
         {
             autoFplDirectActive = false;
-            lblFmsState.Content = "AutoNAV Disabled";
-            lblFmsState.Foreground = System.Windows.Media.Brushes.Red;
+            _lblFmsState.Text = "AutoNAV Disabled";
+            _lblFmsState.Foreground = Brushes.Red;
            // pFplState = null;
         }
         #endregion
 
-        public void fplReceived(APIFlightPlan fpl)
+        public void FplReceived(APIFlightPlan fpl)
         {
             if (!pSettingFpl)
             {
@@ -201,7 +254,7 @@ namespace IF_FMS
                 }
 
                 //          this.dgFpl.ItemsSource = CustomFPL.waypoints;
-                dgFpl.Items.Refresh();
+                //_dgFpl.Items();
                 pFplState.fplDetails = CustomFPL;
                 pManualRetrieveFPL = false;
             }
@@ -262,9 +315,9 @@ namespace IF_FMS
                 if (pFplState.legIndex >= pFplState.fpl.Waypoints.Count())
                 {
                     //We hit the destination!
-                    lblNextWpt.Content = "Destination Reached!";
-                    lblDist2Next.Content = "";
-                    lblHdg2Next.Content = "";
+                    _lblNextWpt.Text = "Destination Reached!";
+                    _lblDist2Next.Text = "";
+                    _lblHdg2Next.Text = "";
                     autoFplDirectActive = false;
                     return;
                 }
@@ -276,17 +329,17 @@ namespace IF_FMS
                 pFplState.distToNextWpt = getDistToWaypoint(acState.Location, pFplState.nextWpt);
             }
 
-            lblNextWpt.Content = pFplState.nextWpt.Name;
-            lblDist2Next.Content = String.Format("{0:0.000}", pFplState.distToNextWpt);
-            lblAirspeedSet.Content = String.Format("{0:0.000}", pFplState.thisSpeed);
-            lblAltitudeSet.Content = pFplState.nextAltitude.ToString();
+            _lblNextWpt.Text = pFplState.nextWpt.Name;
+            _lblDist2Next.Text = String.Format("{0:0.000}", pFplState.distToNextWpt);
+            _lblAirspeedSet.Text = String.Format("{0:0.000}", pFplState.thisSpeed);
+            _lblAltitudeSet.Text = pFplState.nextAltitude.ToString();
 
             //Adjust heading for magnetic declination
             double declination = acState.HeadingTrue - acState.HeadingMagnetic;
 
             //Get heading to next
             pFplState.hdgToNextWpt = getHeadingToWaypoint(acState.Location, pFplState.nextWpt) - declination;
-            lblHdg2Next.Content = String.Format("{0:0.000}", pFplState.hdgToNextWpt);
+            _lblHdg2Next.Text = String.Format("{0:0.000}", pFplState.hdgToNextWpt);
 
             //Calculate VS to hit target altitude
             if (pFplState.nextAltitude > 0)
@@ -319,7 +372,7 @@ namespace IF_FMS
                     vs = 2300;
                 }
 
-                lblVsSet.Content = string.Format("{0:0.000}", vs);
+                _lblVsSet.Text = string.Format("{0:0.000}", vs);
                 //Adjust AutoPilot
                 setAutoPilotParams(pFplState.nextAltitude, pFplState.hdgToNextWpt, vs, pFplState.nextSpeed);
             }
@@ -354,40 +407,45 @@ namespace IF_FMS
 
         private void logMessage(string msg)
         {
-            if(chkFilterCallsignOnly.IsChecked==true && msg.Contains(Callsign))
+            if(_chkFilterCallsignOnly.IsChecked == true && msg.Contains(Callsign))
             {
-                txtAtcLog.AppendText(msg + "\n");
-                txtAtcLog.ScrollToEnd();
-            }else if (chkFilterCallsignOnly.IsChecked == false)
+                _txtAtcLog.Text += msg + "\n";
+                _txtAtcLog.CaretIndex = int.MaxValue;
+            }else if (_chkFilterCallsignOnly.IsChecked == false)
             {
-                txtAtcLog.AppendText(msg + "\n");
-                txtAtcLog.ScrollToEnd();
+                _txtAtcLog.Text += msg + "\n";
+                _txtAtcLog.CaretIndex = int.MaxValue;
             }
         }
 
         private void chkEnableAtcAutopilot_Checked(object sender, RoutedEventArgs e)
         {
-            if (chkEnableAtcAutopilot.IsChecked == true)
+            if (_chkEnableAtcAutopilot.IsChecked == true)
             {
                 //Start receiving ATC messages
                 client.ExecuteCommand("Live.EnableATCMessageNotification");
             }
-            if ((chkEnableAtcAutopilot.IsChecked == true) && (txtCurrentCallsign.Text == null || txtCurrentCallsign.Text == ""))
+            if ((_chkEnableAtcAutopilot.IsChecked == true) && (_txtCurrentCallsign.Text == null || _txtCurrentCallsign.Text == ""))
             {
-                MessageBox.Show("Must enter your current callsign or this will not work!");
-                chkEnableAtcAutopilot.IsChecked = false;
+                MessageBoxManager
+                    .GetMessageBoxStandardWindow("Info",
+                        "Must enter your current callsign or this will not work!",
+                        ButtonEnum.Ok, Icon.Info)
+                    .Show();
+
+                _chkEnableAtcAutopilot.IsChecked = false;
             }
         }
         
         public string Callsign
         {
-            get { return txtCurrentCallsign.Text; }
-            set { txtCurrentCallsign.Text = value; }
+            get { return _txtCurrentCallsign.Text; }
+            set { _txtCurrentCallsign.Text = value; }
         }
         
         public bool? AtcControlledAutopilotEnabled {
-            get { return chkEnableAtcAutopilot.IsChecked; }
-            set { chkEnableAtcAutopilot.IsChecked = value; } }
+            get { return _chkEnableAtcAutopilot.IsChecked; }
+            set { _chkEnableAtcAutopilot.IsChecked = value; } }
         public void handleAtcMessage(APIATCMessage AtcMsg, APIAircraftState acState)
         {
 
@@ -618,8 +676,8 @@ namespace IF_FMS
             if (!holdingActive)
             {
                 holdingTrack.Clear();
-                leftTurns = slider.Value==0?true:false;
-                legLength = Double.Parse(txtLegLen.Text);
+                leftTurns = _slider.Value == 0;
+                legLength = Double.Parse(_txtLegLen.Text);
                 initialHoldStart = null;
                 initialHdg = -1;
                 backBearing = 0;
@@ -627,11 +685,11 @@ namespace IF_FMS
                 hdgSet = 999;
                 hdgSetComplete = false;
                 holdingActive = true;
-                btnHold.Content = "END HOLD";
+                _btnHold.Content = "END HOLD";
             } else
             {
                 holdingActive = false;
-                btnHold.Content = "HOLD";
+                _btnHold.Content = "HOLD";
             }
         }
 
@@ -651,7 +709,7 @@ namespace IF_FMS
 
                     //turn to back-bearing
                     backBearing = initialHdg < 180 ? initialHdg + 180 : initialHdg - 180;
-                    if (lblHoldInfo.Content.ToString() != ("Holding: Turn " + Math.Floor(backBearing).ToString())) { lblHoldInfo.Content = ("Holding: Turn " + Math.Floor(backBearing).ToString()); }
+                    if (_lblHoldInfo.Text.ToString() != ("Holding: Turn " + Math.Floor(backBearing).ToString())) { _lblHoldInfo.Text = ("Holding: Turn " + Math.Floor(backBearing).ToString()); }
 
                     if (!hdgSetComplete) { hdgSet = initialHdg; }
                     degChg = 0;
@@ -675,7 +733,7 @@ namespace IF_FMS
                     break;
                 case 1:
                     //maintain back-bearing for legLength
-                    if (lblHoldInfo.Content.ToString() != ("Holding: Leg 1")) { lblHoldInfo.Content = "Holding: Leg 1"; }
+                    if (_lblHoldInfo.Text.ToString() != ("Holding: Leg 1")) { _lblHoldInfo.Text = "Holding: Leg 1"; }
                     double err = acState.CourseTrue - acState.HeadingTrue;
                     setAutoPilotParams(-1, backBearing - err, 999999, -1);
                     hdgSetComplete = false;
@@ -683,7 +741,7 @@ namespace IF_FMS
                     break;
                 case 2:
                     //turn back to initial heading
-                    if (lblHoldInfo.Content.ToString() != ("Holding: Turn " + Math.Floor(initialHdg).ToString())) { lblHoldInfo.Content = ("Holding: Turn " + Math.Floor(initialHdg).ToString()); }
+                    if (_lblHoldInfo.Text.ToString() != ("Holding: Turn " + Math.Floor(initialHdg).ToString())) { _lblHoldInfo.Text = ("Holding: Turn " + Math.Floor(initialHdg).ToString()); }
                     degChg = 0;
                     while (Math.Abs(hdgSet - Math.Floor(initialHdg)) > 1)
                     {
@@ -706,7 +764,7 @@ namespace IF_FMS
                     break;
                 case 3:
                     //Maintain initial heading for legLength back to the hold fix
-                    if (lblHoldInfo.Content.ToString() != "Holding: To Fix") { lblHoldInfo.Content = "Holding: To Fix"; }
+                    if (_lblHoldInfo.Text.ToString() != "Holding: To Fix") { _lblHoldInfo.Text = "Holding: To Fix"; }
                     hdgSetComplete = false;
 
                     //if (getDistBtwnPoints(initialHoldStart, pAircraftState.Location) > legLength) { holdLeg = 1; }

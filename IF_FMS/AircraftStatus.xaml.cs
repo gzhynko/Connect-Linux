@@ -1,17 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Drawing;
+using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
 
 namespace IF_FMS
 {
@@ -20,11 +11,31 @@ namespace IF_FMS
     /// </summary>
     public partial class AircraftStatus : UserControl
     {
+        private Avalonia.Controls.Shapes.Rectangle _ApOff;
+        private Avalonia.Controls.Shapes.Rectangle _GearDownOff;
+        private Avalonia.Controls.Shapes.Rectangle _GearUpOff;
+        private Avalonia.Controls.Shapes.Rectangle _StallOff;
+        private Avalonia.Controls.Shapes.Rectangle _StallWarnOff;
+
         public AircraftStatus()
         {
             InitializeComponent();
+            InitializeUiElements();
         }
 
+        private void InitializeUiElements()
+        {
+            _ApOff = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("ApOff");
+            _GearDownOff = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("GearDownOff");
+            _GearUpOff = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("GearUpOff");
+            _StallOff = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("StallOff");
+            _StallWarnOff = this.FindControl<Avalonia.Controls.Shapes.Rectangle>("StallWarnOff");
+        }
+
+        private void InitializeComponent()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
 
         public class AircraftStatusForDisplay
         {
@@ -41,27 +52,6 @@ namespace IF_FMS
             public float CourseTrue { get; set; }
             public float GForce { get; set; }
             public float SideForce { get; set; }
-            //public GearState GearState { get; set; }
-            //   public float GroundSpeed { get; set; }
-            // public float IndicatedAirspeed { get; set; }
-            // public bool IsAutopilotOn { get; set; }
-            //public bool IsCrashed { get; set; }
-            //public bool IsLanded { get; set; }
-            //public bool IsOnGround { get; set; }
-            //public bool IsOverLandingWeight { get; set; }
-            //public bool IsOverTakeoffWeight { get; set; }
-            //public bool IsPushbackActive { get; set; }
-            //public Coordinate Location { get; set; }
-            // public float MagneticDeviation { get; set; }
-            //public bool ReverseThrustState { get; set; }
-            //public SpoilersPosition SpoilersPosition { get; set; }
-            //public bool Stalling { get; set; }
-            //public float StallProximity { get; set; }
-            //public bool StallWarning { get; set; }
-            //public float TrueAirspeed { get; set; }
-            //public float Velocity { get; set; }
-            //public float Weight { get; set; }
-            //public float WeightPercentage { get; set; }
         }
 
         private AircraftStatusForDisplay pAcStateDisplay;
@@ -108,41 +98,41 @@ namespace IF_FMS
                     acStateDict.Add(prop.Name, value);
                 }
             }
-            listView.ItemsSource = acStateDict;
+            //listView.ItemsSource = acStateDict;
 
             //AutoPilot Light
             if(pAcState.IsAutopilotOn)
-            { ApOff.Visibility = Visibility.Collapsed;  }
-            else { ApOff.Visibility = Visibility.Visible; }
+            { _ApOff.IsVisible = false;  }
+            else { _ApOff.IsVisible = true; }
 
             //Gear Lights
             if (pAcState.GearState == Fds.IFAPI.GearState.Down)
             {
-                GearDownOff.Visibility = Visibility.Collapsed;
-                GearUpOff.Visibility = Visibility.Visible;
+                _GearDownOff.IsVisible = false;
+                _GearUpOff.IsVisible = true;
             }
             else
             {
-                GearDownOff.Visibility = Visibility.Visible;
-                GearUpOff.Visibility = Visibility.Collapsed;
+                _GearDownOff.IsVisible = true;
+                _GearUpOff.IsVisible = false;
             }
 
             if (pAcState.StallWarning)
             {
-                StallWarnOff.Visibility = Visibility.Collapsed;
+                _StallWarnOff.IsVisible = false;
             }
             else
             {
-                StallWarnOff.Visibility = Visibility.Visible;
+                _StallWarnOff.IsVisible = true;
             }
 
             if (pAcState.Stalling)
             {
-                StallOff.Visibility = Visibility.Collapsed;
+                _StallOff.IsVisible = false;
             }
             else
             {
-                StallOff.Visibility = Visibility.Visible;
+                _StallOff.IsVisible = true;
             }
         }
     }

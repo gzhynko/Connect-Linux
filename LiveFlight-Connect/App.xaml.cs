@@ -1,28 +1,22 @@
-﻿//
-//  
-//  LiveFlight Connect
-//
-//  App.xaml.cs
-//  Copyright © 2015 [AUTHOR]. All rights reserved.
-//
-//  Licensed under GPL-V3.
-//  https://github.com/LiveFlightApp/Connect-Windows/blob/master/LICENSE
-//
-
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Markup.Xaml;
 
 namespace LiveFlight
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
+    public class App : Application
     {
+        public override void Initialize()
+        {
+            AvaloniaXamlLoader.Load(this);
+        }
+
+        public override void OnFrameworkInitializationCompleted()
+        {
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                desktop.MainWindow = new MainWindow();
+
+            base.OnFrameworkInitializationCompleted();
+        }
     }
 }
